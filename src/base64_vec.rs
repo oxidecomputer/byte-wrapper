@@ -17,6 +17,33 @@ use serde_core::{Deserializer, Serializer, de::Visitor};
 /// 1. Directly as a field type, with serde impls built in.
 /// 2. With `#[serde(with = "Base64Vec")]` and
 ///    `#[schemars(with = "Base64Vec")]` on a `Vec<u8>` field.
+///
+/// # Examples
+///
+/// As a direct field type:
+///
+/// ```
+/// use serde::{Deserialize, Serialize};
+/// use serde_bytefmt::Base64Vec;
+///
+/// #[derive(Serialize, Deserialize)]
+/// struct Blob {
+///     data: Base64Vec,
+/// }
+/// ```
+///
+/// With `#[serde(with)]` on a raw byte vector:
+///
+/// ```
+/// use serde::{Deserialize, Serialize};
+/// use serde_bytefmt::Base64Vec;
+///
+/// #[derive(Serialize, Deserialize)]
+/// struct Blob {
+///     #[serde(with = "Base64Vec")]
+///     data: Vec<u8>,
+/// }
+/// ```
 #[derive(Clone, PartialEq, Eq, Hash, Default)]
 pub struct Base64Vec(pub Vec<u8>);
 
@@ -33,8 +60,27 @@ impl Base64Vec {
         self.0
     }
 
-    /// Serializes a byte vector as base64 (for
-    /// `#[serde(with = "Base64Vec")]`).
+    /// Serializes a byte vector as base64 if the format is human-readable, or
+    /// as raw bytes otherwise.
+    ///
+    /// Intended for use with `#[serde(with = "Base64Vec")]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use serde::{Deserialize, Serialize};
+    /// use serde_bytefmt::Base64Vec;
+    ///
+    /// #[derive(Serialize, Deserialize)]
+    /// struct Blob {
+    ///     #[serde(with = "Base64Vec")]
+    ///     data: Vec<u8>,
+    /// }
+    ///
+    /// let b = Blob { data: vec![1, 2, 3] };
+    /// let json = serde_json::to_string(&b).unwrap();
+    /// assert_eq!(json, r#"{"data":"AQID"}"#);
+    /// ```
     pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -42,8 +88,26 @@ impl Base64Vec {
         serialize_bytes(bytes, serializer)
     }
 
-    /// Deserializes a byte vector from base64 (for
-    /// `#[serde(with = "Base64Vec")]`).
+    /// Deserializes a byte vector from base64 if the format is human-readable,
+    /// or as raw bytes otherwise.
+    ///
+    /// Intended for use with `#[serde(with = "Base64Vec")]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use serde::{Deserialize, Serialize};
+    /// use serde_bytefmt::Base64Vec;
+    ///
+    /// #[derive(Serialize, Deserialize)]
+    /// struct Blob {
+    ///     #[serde(with = "Base64Vec")]
+    ///     data: Vec<u8>,
+    /// }
+    ///
+    /// let b: Blob = serde_json::from_str(r#"{"data":"AQID"}"#).unwrap();
+    /// assert_eq!(b.data, [1, 2, 3]);
+    /// ```
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: Deserializer<'de>,

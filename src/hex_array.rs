@@ -16,6 +16,39 @@ use serde_core::{
 /// 1. Directly as a field type, with serde impls built in.
 /// 2. With `#[serde(with = "HexArray::<N>")]` and
 ///    `#[schemars(with = "HexArray<N>")]` on a `[u8; N]` field.
+///
+/// # Examples
+///
+/// As a direct field type:
+///
+/// ```
+/// # #[cfg(feature = "alloc")]
+/// # {
+/// use serde::{Deserialize, Serialize};
+/// use serde_bytefmt::HexArray;
+///
+/// #[derive(Serialize, Deserialize)]
+/// struct Record {
+///     checksum: HexArray<32>,
+/// }
+/// # }
+/// ```
+///
+/// With `#[serde(with)]` on a raw byte array:
+///
+/// ```
+/// # #[cfg(feature = "alloc")]
+/// # {
+/// use serde::{Deserialize, Serialize};
+/// use serde_bytefmt::HexArray;
+///
+/// #[derive(Serialize, Deserialize)]
+/// struct Record {
+///     #[serde(with = "HexArray::<32>")]
+///     checksum: [u8; 32],
+/// }
+/// # }
+/// ```
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct HexArray<const N: usize>(pub [u8; N]);
 
@@ -38,8 +71,30 @@ impl<const N: usize> HexArray<N> {
         self.0
     }
 
-    /// Serializes a byte array as hex (for
-    /// `#[serde(with = "HexArray::<N>")]`).
+    /// Serializes a byte array as hex in human-readable formats, or as raw
+    /// bytes otherwise.
+    ///
+    /// Intended for use with `#[serde(with = "HexArray::<N>")]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "alloc")]
+    /// # {
+    /// use serde::{Deserialize, Serialize};
+    /// use serde_bytefmt::HexArray;
+    ///
+    /// #[derive(Serialize, Deserialize)]
+    /// struct Record {
+    ///     #[serde(with = "HexArray::<4>")]
+    ///     id: [u8; 4],
+    /// }
+    ///
+    /// let r = Record { id: [0x01, 0x02, 0x03, 0x04] };
+    /// let json = serde_json::to_string(&r).unwrap();
+    /// assert_eq!(json, r#"{"id":"01020304"}"#);
+    /// # }
+    /// ```
     #[cfg(feature = "alloc")]
     pub fn serialize<S>(
         bytes: &[u8; N],
@@ -51,8 +106,29 @@ impl<const N: usize> HexArray<N> {
         serialize_lower(bytes, serializer)
     }
 
-    /// Deserializes a byte array from hex (for
-    /// `#[serde(with = "HexArray::<N>")]`).
+    /// Deserializes a byte array from hex if the format is human-readable, or as
+    /// raw bytes otherwise.
+    ///
+    /// Intended for use with `#[serde(with = "HexArray::<N>")]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(feature = "alloc")]
+    /// # {
+    /// use serde::{Deserialize, Serialize};
+    /// use serde_bytefmt::HexArray;
+    ///
+    /// #[derive(Serialize, Deserialize)]
+    /// struct Record {
+    ///     #[serde(with = "HexArray::<4>")]
+    ///     id: [u8; 4],
+    /// }
+    ///
+    /// let r: Record = serde_json::from_str(r#"{"id":"01020304"}"#).unwrap();
+    /// assert_eq!(r.id, [0x01, 0x02, 0x03, 0x04]);
+    /// # }
+    /// ```
     pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; N], D::Error>
     where
         D: Deserializer<'de>,

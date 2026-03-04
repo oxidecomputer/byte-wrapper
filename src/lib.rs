@@ -6,10 +6,11 @@
 //!
 //! Many binary formats (e.g. [CBOR]) can natively represent byte sequences,
 //! while text formats (e.g. JSON) cannot. This crate bridges the gap: it
-//! serializes byte data as hex or base64 strings in human-readable formats,
+//! serializes byte data as hex or base64 strings in [human-readable formats],
 //! and as efficient raw bytes in binary formats.
 //!
 //! [CBOR]: https://cbor.io/
+//! [human-readable formats]: https://docs.rs/serde_core/latest/serde_core/trait.Serializer.html#method.is_human_readable
 //!
 //! # Types
 //!

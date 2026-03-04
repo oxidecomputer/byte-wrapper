@@ -1,4 +1,4 @@
-set positional-arguments
+set positional-arguments := true
 
 # Note: help messages should be 1 line long as required by just.
 
@@ -12,11 +12,11 @@ powerset *args:
 
 # Build docs for the crate and direct dependencies.
 rustdoc *args:
-    RUSTC_BOOTSTRAP=1 RUSTDOCFLAGS='--cfg=doc_cfg' cargo doc --no-deps --all-features {{args}}
+    RUSTC_BOOTSTRAP=1 RUSTDOCFLAGS='--cfg=doc_cfg' cargo doc --no-deps --all-features {{ args }}
 
 # Generate README.md using `cargo-sync-rdme`.
 generate-readmes:
-    cargo sync-rdme --toolchain nightly-2025-08-31 --all-features
+    cargo sync-rdme --toolchain nightly-2025-11-05 --all-features
 
 # Run cargo release in CI.
 ci-cargo-release:

@@ -1,4 +1,4 @@
-// Copyright (c) The serde_human_bytes Contributors
+// Copyright (c) The serde_bytefmt Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "alloc")]

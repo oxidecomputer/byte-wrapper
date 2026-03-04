@@ -1,4 +1,4 @@
-// Copyright (c) The serde_human_bytes Contributors
+// Copyright (c) The serde_bytefmt Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 use hex_literal::hex;
@@ -7,10 +7,10 @@ use serde::Deserialize;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize)]
 #[cfg_attr(feature = "alloc", derive(serde::Serialize))]
 struct MyStruct {
-    #[serde(deserialize_with = "serde_human_bytes::hex_array::deserialize")]
+    #[serde(deserialize_with = "serde_bytefmt::hex_array::deserialize")]
     #[cfg_attr(
         feature = "alloc",
-        serde(serialize_with = "serde_human_bytes::hex_array::serialize")
+        serde(serialize_with = "serde_bytefmt::hex_array::serialize")
     )]
     x: [u8; 16],
 }
@@ -19,7 +19,7 @@ struct MyStruct {
 #[cfg(feature = "alloc")]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 struct WithHexArrayAttr {
-    #[serde(with = "serde_human_bytes::HexArray::<16>")]
+    #[serde(with = "serde_bytefmt::HexArray::<16>")]
     x: [u8; 16],
 }
 
@@ -27,7 +27,7 @@ struct WithHexArrayAttr {
 #[cfg(feature = "alloc")]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 struct WithHexArrayDirect {
-    x: serde_human_bytes::HexArray<16>,
+    x: serde_bytefmt::HexArray<16>,
 }
 
 static FIXTURE: MyStruct = MyStruct {
@@ -80,7 +80,7 @@ fn hex_array_with_attr() {
 #[test]
 fn hex_array_direct() {
     let fixture = WithHexArrayDirect {
-        x: serde_human_bytes::HexArray::new(hex!("0123456789abcdef0123456789abcdef")),
+        x: serde_bytefmt::HexArray::new(hex!("0123456789abcdef0123456789abcdef")),
     };
 
     let json = serde_json::to_string(&fixture).expect("serialized");

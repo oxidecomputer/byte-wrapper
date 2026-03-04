@@ -1,10 +1,10 @@
 [package]
-name = "serde_human_bytes"
+name = "serde_bytefmt"
 description = "Serialize [u8; N] as bytes or as human-readable strings, depending on the format."
 version = "0.1.0"
 license = "Apache-2.0"
-repository = "https://github.com/oxidecomputer/serde_human_bytes"
-documentation = "https://docs.rs/serde_human_bytes"
+repository = "https://github.com/oxidecomputer/serde_bytefmt"
+documentation = "https://docs.rs/serde_bytefmt"
 edition = "2024"
 rust-version = "1.85"
 keywords = ["serde", "serialization", "no_std", "bytes", "hex"]

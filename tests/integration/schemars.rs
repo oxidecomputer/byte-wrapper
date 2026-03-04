@@ -1,8 +1,8 @@
-// Copyright (c) The serde_human_bytes Contributors
+// Copyright (c) The serde_bytefmt Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 use schemars08::{self as schemars, JsonSchema, schema_for};
-use serde_human_bytes::{Base64Vec, HexArray};
+use serde_bytefmt::{Base64Vec, HexArray};
 
 #[test]
 fn hex_array_schema() {

@@ -1,13 +1,13 @@
-// Copyright (c) The serde_human_bytes Contributors
+// Copyright (c) The serde_bytefmt Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 use hex_literal::hex;
 use serde::{Deserialize, Serialize};
-use serde_human_bytes::Base64Vec;
+use serde_bytefmt::Base64Vec;
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 struct MyStruct {
-    #[serde(with = "serde_human_bytes::base64_vec")]
+    #[serde(with = "serde_bytefmt::base64_vec")]
     data: Vec<u8>,
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) The serde_human_bytes Contributors
+// Copyright (c) The serde_bytefmt Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 //! Serialize a byte array as a list of bytes if human-readable, or as hex if not.

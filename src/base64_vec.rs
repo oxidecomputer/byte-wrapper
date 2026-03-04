@@ -1,4 +1,4 @@
-// Copyright (c) The serde_human_bytes Contributors
+// Copyright (c) The serde_bytefmt Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 //! Serialize a byte vector as base64 if human-readable, or as bytes if not.

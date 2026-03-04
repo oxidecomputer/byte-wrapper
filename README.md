@@ -20,17 +20,17 @@ and as efficient raw bytes in binary formats.
 
 ## Types
 
-* [`HexArray<N>`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array_type/struct.HexArray.html) encodes a fixed-length byte array as a hex string. (The
+* [`HexArray<N>`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array/struct.HexArray.html) encodes a fixed-length byte array as a hex string. (The
   `alloc` feature is required for serialization.)
-* [`Base64Vec`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/base64_vec_type/struct.Base64Vec.html) encodes a variable-length byte vector as a base64 string.
+* [`Base64Vec`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/base64_vec/struct.Base64Vec.html) encodes a variable-length byte vector as a base64 string.
   (The `alloc` feature is required.)
 
-These types can be used directly as struct fielde, or be applied to
+These types can be used directly as struct fields, or be applied to
 existing `[u8; N]` / `Vec<u8>` fields via `#[serde(with = "...")]`.
 
 ## Examples
 
-Using [`HexArray`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array_type/struct.HexArray.html) as a field type:
+Using [`HexArray`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array/struct.HexArray.html) as a field type:
 
 ````rust
 use serde::{Deserialize, Serialize};
@@ -57,8 +57,8 @@ struct Record {
 
 ## Features
 
-* **`alloc`**: enables [`Base64Vec`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/base64_vec_type/struct.Base64Vec.html), as well as
-  [`HexArray`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array_type/struct.HexArray.html) serialization. *Enabled by default.*
+* **`alloc`**: enables [`Base64Vec`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/base64_vec/struct.Base64Vec.html), as well as
+  [`HexArray`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array/struct.HexArray.html) serialization. *Enabled by default.*
 * **`schemars08`**: derives `JsonSchema` for both types.
   *Not enabled by default.*
 

@@ -1,5 +1,5 @@
 // Copyright (c) The serde_bytefmt Contributors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 use hex_literal::hex;
 use serde::{Deserialize, Serialize};
@@ -30,12 +30,11 @@ static FIXTURE: &[u8] = &hex!("0123456789abcdef0123456789abcdef");
 static AS_JSON: &str = r#"{"data":"ASNFZ4mrze8BI0VniavN7w=="}"#;
 
 // CBOR: map with one key "data" and a byte string value.
-static AS_CBOR: [u8; 23] = hex!("a1646461746150 0123456789abcdef0123456789abcdef");
+static AS_CBOR: [u8; 23] =
+    hex!("a1646461746150 0123456789abcdef0123456789abcdef");
 
 fn fixture() -> MyStruct {
-    MyStruct {
-        data: FIXTURE.to_vec(),
-    }
+    MyStruct { data: FIXTURE.to_vec() }
 }
 
 #[test]
@@ -49,7 +48,8 @@ fn base64_serialize() {
     );
 
     let mut cbor_actual: Vec<u8> = Vec::new();
-    ciborium::ser::into_writer(&fixture, &mut cbor_actual).expect("writing to vec<u8> succeeded");
+    ciborium::ser::into_writer(&fixture, &mut cbor_actual)
+        .expect("writing to vec<u8> succeeded");
 
     assert_eq!(cbor_actual, AS_CBOR, "CBOR matched");
 }
@@ -58,37 +58,36 @@ fn base64_serialize() {
 fn base64_deserialize() {
     let fixture = fixture();
 
-    let json_actual: MyStruct =
-        serde_json::from_str(AS_JSON).expect("deserializing from JSON succeeded");
+    let json_actual: MyStruct = serde_json::from_str(AS_JSON)
+        .expect("deserializing from JSON succeeded");
     assert_eq!(fixture, json_actual, "deserializing from JSON matched");
 
-    let cbor_actual: MyStruct =
-        ciborium::de::from_reader(&AS_CBOR[..]).expect("deserializing from CBOR succeeded");
+    let cbor_actual: MyStruct = ciborium::de::from_reader(&AS_CBOR[..])
+        .expect("deserializing from CBOR succeeded");
     assert_eq!(fixture, cbor_actual, "deserializing from CBOR succeeded");
 }
 
 #[test]
 fn base64_vec_with_attr() {
-    let fixture = WithBase64VecAttr {
-        data: FIXTURE.to_vec(),
-    };
+    let fixture = WithBase64VecAttr { data: FIXTURE.to_vec() };
 
     let json = serde_json::to_string(&fixture).expect("serialized");
     assert_eq!(json, AS_JSON);
 
-    let roundtrip: WithBase64VecAttr = serde_json::from_str(&json).expect("deserialized");
+    let roundtrip: WithBase64VecAttr =
+        serde_json::from_str(&json).expect("deserialized");
     assert_eq!(fixture, roundtrip);
 }
 
 #[test]
 fn base64_vec_direct() {
-    let fixture = WithBase64VecDirect {
-        data: Base64Vec::new(FIXTURE.to_vec()),
-    };
+    let fixture =
+        WithBase64VecDirect { data: Base64Vec::new(FIXTURE.to_vec()) };
 
     let json = serde_json::to_string(&fixture).expect("serialized");
     assert_eq!(json, AS_JSON);
 
-    let roundtrip: WithBase64VecDirect = serde_json::from_str(&json).expect("deserialized");
+    let roundtrip: WithBase64VecDirect =
+        serde_json::from_str(&json).expect("deserialized");
     assert_eq!(fixture, roundtrip);
 }

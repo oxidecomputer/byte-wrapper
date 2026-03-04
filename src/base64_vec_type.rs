@@ -1,5 +1,5 @@
 // Copyright (c) The serde_bytefmt Contributors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! The [`Base64Vec`] newtype wrapper.
 
@@ -63,9 +63,7 @@ impl fmt::Debug for Base64Vec {
 
 impl fmt::Display for Base64Vec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        base64::engine::general_purpose::STANDARD
-            .encode(&self.0)
-            .fmt(f)
+        base64::engine::general_purpose::STANDARD.encode(&self.0).fmt(f)
     }
 }
 

@@ -1,5 +1,5 @@
 // Copyright (c) The serde_bytefmt Contributors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! Serialize a byte array as a list of bytes if human-readable, or as hex if not.
 
@@ -31,7 +31,10 @@ mod alloc_impls {
     }
 
     /// Similar to [`serialize`], except to upper-case.
-    pub fn serialize_upper<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize_upper<S>(
+        bytes: &[u8],
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -48,7 +51,9 @@ mod alloc_impls {
 pub use alloc_impls::*;
 
 /// Deserializes hex strings (if human-readable) or byte arrays (if not) to `[u8; N]`.
-pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
+pub fn deserialize<'de, D, const N: usize>(
+    deserializer: D,
+) -> Result<[u8; N], D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -75,7 +80,10 @@ where
                 Ok(out)
             }
 
-            fn visit_borrowed_str<E>(self, data: &'de2 str) -> Result<Self::Value, E>
+            fn visit_borrowed_str<E>(
+                self,
+                data: &'de2 str,
+            ) -> Result<Self::Value, E>
             where
                 E: Error,
             {

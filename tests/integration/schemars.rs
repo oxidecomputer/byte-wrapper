@@ -1,5 +1,5 @@
 // Copyright (c) The serde_bytefmt Contributors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 use schemars08::{self as schemars, JsonSchema, schema_for};
 use serde_bytefmt::{Base64Vec, HexArray};

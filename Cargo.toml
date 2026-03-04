@@ -2,13 +2,30 @@
 name = "serde_bytefmt"
 description = "Serialize [u8; N] as bytes or as human-readable strings, depending on the format."
 version = "0.1.0"
-license = "Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/oxidecomputer/serde_bytefmt"
 documentation = "https://docs.rs/serde_bytefmt"
 edition = "2024"
 rust-version = "1.85"
 keywords = ["serde", "serialization", "no_std", "bytes", "hex"]
 categories = ["encoding", "no-std"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[package.metadata.cargo-sync-rdme.badge.badges]
+license = true
+crates-io = true
+docs-rs = true
+rust-version = true
+
+[package.metadata.release]
+pre-release-replacements = [
+    { file = "CHANGELOG.md", search = "Unreleased", replace = "[{{version}}]", min = 1 },
+    { file = "CHANGELOG.md", search = "ReleaseDate", replace = "{{date}}", min = 1 },
+    { file = "CHANGELOG.md", search = "<!-- next-header -->", replace = "<!-- next-header -->\n## Unreleased - ReleaseDate\n", exactly = 1 },
+    { file = "CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[{{version}}]: https://github.com/oxidecomputer/serde_bytefmt/releases/tag/serde_bytefmt-{{version}}", exactly = 1 },
+]
 
 [features]
 default = ["alloc"]

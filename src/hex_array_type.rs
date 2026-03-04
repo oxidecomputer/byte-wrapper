@@ -1,5 +1,5 @@
 // Copyright (c) The serde_bytefmt Contributors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! The [`HexArray`] newtype wrapper.
 
@@ -39,7 +39,10 @@ impl<const N: usize> HexArray<N> {
 
     /// Serializes a byte array as hex (for `#[serde(with = "HexArray::<N>")]`).
     #[cfg(feature = "alloc")]
-    pub fn serialize<S>(bytes: &[u8; N], serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(
+        bytes: &[u8; N],
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: serde_core::Serializer,
     {

@@ -3,8 +3,6 @@ on:
     branches:
       - main
   pull_request:
-    branches:
-      - main
 
 name: CI
 
@@ -15,36 +13,54 @@ jobs:
     env:
       RUSTFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@cargo-hack
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - name: Install just, cargo-hack, and cargo-sync-rdme
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just,cargo-hack,cargo-sync-rdme
       - name: Lint (clippy)
-        run: cargo hack --feature-powerset clippy --all-targets
+        run: just powerset clippy --all-targets
       - name: Lint (rustfmt)
         run: cargo xfmt --check
+      - name: Run rustdoc
+        run: just rustdoc
+      # Pin to a specific nightly for compatibility with cargo-sync-rdme.
+      - name: Install nightly toolchain for cargo-sync-rdme
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2025-08-31
+      - name: Regenerate readmes
+        run: just generate-readmes
+      - name: Check for differences
+        run: git diff --exit-code
 
-  build:
+  build-and-test:
     name: Build and test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        # 1.85 is the MSRV
-        rust-version: ["1.85", stable]
+        os: [ubuntu-latest, windows-latest]
+        # 1.85 is the MSRV.
+        rust-version: ["1.85", "stable"]
       fail-fast: false
     env:
       RUSTFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust-version }}
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
       - uses: taiki-e/install-action@cargo-hack
+      - uses: taiki-e/install-action@just
+      - uses: taiki-e/install-action@nextest
       - name: Build
-        run: cargo hack --feature-powerset build
-      - name: Test
-        run: cargo hack --feature-powerset test
+        run: just powerset build
+      - name: Run tests
+        run: just powerset nextest run
+      - name: Doctests
+        run: just powerset test --doc

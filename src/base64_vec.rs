@@ -1,5 +1,5 @@
 // Copyright (c) The serde_bytefmt Contributors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! Serialize a byte vector as base64 if human-readable, or as bytes if not.
 
@@ -49,7 +49,10 @@ where
                     .map_err(Error::custom)
             }
 
-            fn visit_borrowed_str<E>(self, data: &'de2 str) -> Result<Self::Value, E>
+            fn visit_borrowed_str<E>(
+                self,
+                data: &'de2 str,
+            ) -> Result<Self::Value, E>
             where
                 E: Error,
             {

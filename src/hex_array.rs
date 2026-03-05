@@ -33,6 +33,7 @@ use core::{
 /// let parsed: HexArray<4> = "0102abff".parse().unwrap();
 /// assert_eq!(parsed, h);
 /// ```
+#[must_use]
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HexArray<const N: usize>(pub [u8; N]);
 
@@ -51,6 +52,7 @@ impl<const N: usize> HexArray<N> {
 
     /// Returns the inner byte array.
     #[inline]
+    #[must_use]
     pub const fn into_inner(self) -> [u8; N] {
         self.0
     }

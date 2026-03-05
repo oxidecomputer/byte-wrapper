@@ -28,6 +28,7 @@ use core::{error, fmt, str::FromStr};
 /// let parsed: Base64Vec = "AQID".parse().unwrap();
 /// assert_eq!(*parsed, [1, 2, 3]);
 /// ```
+#[must_use]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Base64Vec(pub Vec<u8>);
 
@@ -40,6 +41,7 @@ impl Base64Vec {
 
     /// Returns the inner byte vector.
     #[inline]
+    #[must_use]
     pub fn into_inner(self) -> Vec<u8> {
         self.0
     }

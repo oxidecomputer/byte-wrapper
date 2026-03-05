@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/oxidecomputer/byte-wrapper"
 documentation = "https://docs.rs/byte-wrapper"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 keywords = ["bytes", "hex", "base64", "serde", "no_std"]
 categories = ["encoding", "no-std"]
 

@@ -8,7 +8,10 @@ extern crate alloc;
 use alloc::vec::Vec;
 use base64::Engine;
 use core::fmt;
-use serde_core::{Deserializer, Serializer, de::Visitor};
+use serde_core::{
+    Deserializer, Serializer,
+    de::{SeqAccess, Visitor},
+};
 
 /// A byte vector that serializes as base64 in human-readable formats.
 ///
@@ -186,6 +189,17 @@ where
                 E: Error,
             {
                 Ok(v.to_vec())
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de2>,
+            {
+                let mut out = Vec::with_capacity(seq.size_hint().unwrap_or(0));
+                while let Some(byte) = seq.next_element()? {
+                    out.push(byte);
+                }
+                Ok(out)
             }
         }
 

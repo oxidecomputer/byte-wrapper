@@ -52,6 +52,75 @@ mod alloc_tests {
         assert_eq!(FIXTURE, cbor_actual, "deserializing from CBOR succeeded");
     }
 
+    /// Test that `HexArray` can deserialize from a CBOR array
+    /// (via `visit_seq`), not only from a CBOR byte string.
+    /// Some binary formats represent byte data as integer
+    /// sequences rather than native byte strings.
+    #[test]
+    fn hex_deserialize_from_seq() {
+        #[derive(Debug, Eq, PartialEq, Deserialize)]
+        struct SmallHex {
+            x: serde_bytefmt::HexArray<4>,
+        }
+
+        #[derive(Debug, Eq, PartialEq, Deserialize)]
+        struct SmallHexAttr {
+            #[serde(with = "serde_bytefmt::HexArray::<4>")]
+            x: [u8; 4],
+        }
+
+        // CBOR encoding of {"x": [1, 2, 3, 4]} where the value
+        // is a CBOR array (major type 4), not a byte string
+        // (major type 2).
+        let cbor_array = hex!("a1 6178 84 01020304");
+
+        let direct: SmallHex = ciborium::de::from_reader(&cbor_array[..])
+            .expect("deserialized HexArray from CBOR array");
+        assert_eq!(
+            direct,
+            SmallHex { x: serde_bytefmt::HexArray::new([1, 2, 3, 4]) },
+        );
+
+        let with_attr: SmallHexAttr =
+            ciborium::de::from_reader(&cbor_array[..]).expect(
+                "deserialized [u8; N] with HexArray from \
+                     CBOR array",
+            );
+        assert_eq!(with_attr, SmallHexAttr { x: [1, 2, 3, 4] },);
+    }
+
+    /// JSON is human-readable, so `HexArray` expects a hex string,
+    /// not an array of integers. Verify that a JSON array is
+    /// rejected.
+    #[test]
+    fn hex_json_array_rejected() {
+        let json = r#"{"x":[1,2,3,4]}"#;
+
+        let err = serde_json::from_str::<WithHexArrayAttr>(json)
+            .expect_err("JSON array should not deserialize as HexArray");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("hex-encoded string"),
+            "error should mention hex string, got: {msg}",
+        );
+
+        #[derive(Debug, Deserialize)]
+        struct SmallHexDirect {
+            #[expect(dead_code)]
+            x: serde_bytefmt::HexArray<4>,
+        }
+
+        let err = serde_json::from_str::<SmallHexDirect>(json).expect_err(
+            "JSON array should not deserialize as \
+                     direct HexArray",
+        );
+        let msg = err.to_string();
+        assert!(
+            msg.contains("hex-encoded string"),
+            "error should mention hex string, got: {msg}",
+        );
+    }
+
     #[test]
     fn hex_array_direct() {
         let fixture = WithHexArrayDirect {

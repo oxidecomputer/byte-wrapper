@@ -6,7 +6,7 @@
 use core::{convert::TryInto, fmt};
 use serde_core::{
     Deserializer,
-    de::{Expected, Visitor},
+    de::{Expected, SeqAccess, Visitor},
 };
 
 /// A byte array that serializes as hex in human-readable formats.
@@ -215,6 +215,19 @@ where
             {
                 v.try_into()
                     .map_err(|_| E::invalid_length(v.len(), &HexExpected::<N>))
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de2>,
+            {
+                let mut out = [0u8; N];
+                for (i, byte) in out.iter_mut().enumerate() {
+                    *byte = seq.next_element()?.ok_or_else(|| {
+                        Error::invalid_length(i, &HexExpected::<N>)
+                    })?;
+                }
+                Ok(out)
             }
         }
 

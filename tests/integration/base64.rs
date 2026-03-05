@@ -67,6 +67,68 @@ fn base64_deserialize() {
     assert_eq!(fixture, cbor_actual, "deserializing from CBOR succeeded");
 }
 
+/// Test that `Base64Vec` can deserialize from a CBOR array
+/// (via `visit_seq`), not only from a CBOR byte string.
+/// Some binary formats represent byte data as integer sequences
+/// rather than native byte strings.
+#[test]
+fn base64_deserialize_from_seq() {
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    struct DirectSmall {
+        data: Base64Vec,
+    }
+
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    struct AttrSmall {
+        #[serde(with = "Base64Vec")]
+        data: Vec<u8>,
+    }
+
+    // CBOR encoding of {"data": [1, 2, 3, 4]} where the value
+    // is a CBOR array (major type 4), not a byte string
+    // (major type 2).
+    let cbor_array = hex!("a1 6464617461 84 01020304");
+
+    let direct: DirectSmall = ciborium::de::from_reader(&cbor_array[..])
+        .expect("deserialized Base64Vec from CBOR array");
+    assert_eq!(direct, DirectSmall { data: Base64Vec::new(vec![1, 2, 3, 4]) },);
+
+    let with_attr: AttrSmall = ciborium::de::from_reader(&cbor_array[..])
+        .expect("deserialized Vec<u8> with Base64Vec from CBOR array");
+    assert_eq!(with_attr, AttrSmall { data: vec![1, 2, 3, 4] },);
+}
+
+/// JSON is human-readable, so `Base64Vec` expects a base64 string,
+/// not an array of integers. Verify that a JSON array is rejected.
+#[test]
+fn base64_json_array_rejected() {
+    let json = r#"{"data":[1,2,3,4]}"#;
+
+    let err = serde_json::from_str::<WithBase64VecAttr>(json)
+        .expect_err("JSON array should not deserialize as Base64Vec");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("base64-encoded string"),
+        "error should mention base64 string, got: {msg}",
+    );
+
+    #[derive(Debug, Deserialize)]
+    struct DirectSmall {
+        #[expect(dead_code)]
+        data: Base64Vec,
+    }
+
+    let err = serde_json::from_str::<DirectSmall>(json).expect_err(
+        "JSON array should not deserialize as direct \
+             Base64Vec",
+    );
+    let msg = err.to_string();
+    assert!(
+        msg.contains("base64-encoded string"),
+        "error should mention base64 string, got: {msg}",
+    );
+}
+
 #[test]
 fn base64_vec_with_attr() {
     let fixture = WithBase64VecAttr { data: FIXTURE.to_vec() };

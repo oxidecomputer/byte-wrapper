@@ -154,6 +154,50 @@ fn hex_wrong_length_rejected() {
     );
 }
 
+// -- FromStr tests --
+
+#[test]
+fn hex_from_str() {
+    let h: HexArray<4> = "01020304".parse().expect("parsed");
+    assert_eq!(h, HexArray::new([0x01, 0x02, 0x03, 0x04]));
+
+    // Uppercase input.
+    let h: HexArray<2> = "ABCD".parse().expect("parsed uppercase");
+    assert_eq!(h, HexArray::new([0xab, 0xcd]));
+
+    // Mixed case.
+    let h: HexArray<2> = "aBcD".parse().expect("parsed mixed case");
+    assert_eq!(h, HexArray::new([0xab, 0xcd]));
+
+    // Empty.
+    let h: HexArray<0> = "".parse().expect("parsed empty");
+    assert_eq!(h, HexArray::new([]));
+}
+
+#[test]
+fn hex_from_str_wrong_length() {
+    use serde_bytefmt::ParseHexError;
+
+    let err = "0102".parse::<HexArray<4>>().expect_err("too short");
+    assert_eq!(err, ParseHexError::InvalidLength { expected: 8, actual: 4 },);
+    assert!(
+        err.to_string().contains("expected 8 hex characters, got 4"),
+        "got: {err}",
+    );
+
+    let err = "010203040506".parse::<HexArray<4>>().expect_err("too long");
+    assert_eq!(err, ParseHexError::InvalidLength { expected: 8, actual: 12 },);
+}
+
+#[test]
+fn hex_from_str_invalid_chars() {
+    use serde_bytefmt::ParseHexError;
+
+    let err = "0g020304".parse::<HexArray<4>>().expect_err("invalid hex char");
+    assert_eq!(err, ParseHexError::InvalidHexCharacter { c: 'g', index: 1 },);
+    assert!(err.to_string().contains("'g'"), "got: {err}",);
+}
+
 // -- Display and Debug formatting tests --
 
 #[test]

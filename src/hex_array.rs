@@ -3,7 +3,12 @@
 
 //! The [`HexArray`] newtype wrapper.
 
-use core::{convert::TryInto, fmt, fmt::Write};
+use core::{
+    convert::TryInto,
+    error,
+    fmt::{self, Write},
+    str::FromStr,
+};
 use serde_core::{
     Deserializer,
     de::{Expected, SeqAccess, Visitor},
@@ -247,6 +252,73 @@ struct HexStrExpected<const N: usize>;
 impl<const N: usize> Expected for HexStrExpected<N> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "a hex string {} characters long", N * 2)
+    }
+}
+
+/// Error returned by [`HexArray::from_str`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ParseHexError {
+    /// The input string had the wrong length.
+    InvalidLength {
+        /// Expected number of hex characters.
+        expected: usize,
+        /// Actual number of characters in the input.
+        actual: usize,
+    },
+    /// The input contained an invalid hex character.
+    InvalidHexCharacter {
+        /// The invalid character.
+        c: char,
+        /// Byte index of the invalid character in the input.
+        index: usize,
+    },
+}
+
+impl fmt::Display for ParseHexError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseHexError::InvalidLength { expected, actual } => {
+                write!(
+                    f,
+                    "expected {} hex characters, got {}",
+                    expected, actual,
+                )
+            }
+            ParseHexError::InvalidHexCharacter { c, index } => {
+                write!(f, "invalid hex character '{}' at index {}", c, index,)
+            }
+        }
+    }
+}
+
+impl error::Error for ParseHexError {}
+
+impl<const N: usize> FromStr for HexArray<N> {
+    type Err = ParseHexError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let expected = N * 2;
+        if s.len() != expected {
+            return Err(ParseHexError::InvalidLength {
+                expected,
+                actual: s.len(),
+            });
+        }
+        let mut out = [0u8; N];
+        hex::decode_to_slice(s, &mut out).map_err(|e| {
+            match e {
+                hex::FromHexError::InvalidHexCharacter { c, index } => {
+                    ParseHexError::InvalidHexCharacter { c, index }
+                }
+                // The length is already validated above, so this branch is
+                // unreachable in practice.
+                hex::FromHexError::OddLength
+                | hex::FromHexError::InvalidStringLength => {
+                    ParseHexError::InvalidLength { expected, actual: s.len() }
+                }
+            }
+        })?;
+        Ok(Self(out))
     }
 }
 

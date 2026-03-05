@@ -4,6 +4,7 @@
 //! The [`HexArray`] newtype wrapper.
 
 use core::{
+    array::TryFromSliceError,
     error,
     fmt::{self, Write},
     str::FromStr,
@@ -448,6 +449,15 @@ impl<const N: usize> From<HexArray<N>> for [u8; N] {
     #[inline]
     fn from(hex_array: HexArray<N>) -> Self {
         hex_array.0
+    }
+}
+
+impl<const N: usize> TryFrom<&[u8]> for HexArray<N> {
+    type Error = TryFromSliceError;
+
+    #[inline]
+    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+        <[u8; N]>::try_from(slice).map(Self)
     }
 }
 

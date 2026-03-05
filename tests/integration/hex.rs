@@ -242,6 +242,26 @@ fn hex_from_str_invalid_chars() {
     assert!(err.to_string().contains("'g'"), "got: {err}",);
 }
 
+// -- TryFrom<&[u8]> tests --
+
+#[test]
+fn hex_try_from_slice() {
+    let slice: &[u8] = &[0x01, 0x02, 0x03, 0x04];
+    let h = HexArray::<4>::try_from(slice).expect("correct length");
+    assert_eq!(h, HexArray::new([0x01, 0x02, 0x03, 0x04]));
+
+    // Empty.
+    let h = HexArray::<0>::try_from([].as_slice()).expect("empty");
+    assert_eq!(h, HexArray::new([]));
+
+    // Too short.
+    HexArray::<4>::try_from([0x01, 0x02].as_slice()).expect_err("too short");
+
+    // Too long.
+    HexArray::<2>::try_from([0x01, 0x02, 0x03].as_slice())
+        .expect_err("too long");
+}
+
 // -- Display and Debug formatting tests --
 
 #[test]

@@ -224,11 +224,31 @@ where
             where
                 A: SeqAccess<'de2>,
             {
+                // Reject early if the sequence reports a wrong
+                // length.
+                if let Some(len) = seq.size_hint() {
+                    if len != N {
+                        return Err(Error::invalid_length(
+                            len,
+                            &HexExpected::<N>,
+                        ));
+                    }
+                }
                 let mut out = [0u8; N];
                 for (i, byte) in out.iter_mut().enumerate() {
                     *byte = seq.next_element()?.ok_or_else(|| {
                         Error::invalid_length(i, &HexExpected::<N>)
                     })?;
+                }
+                // Reject trailing elements rather than silently
+                // discarding them.
+                if seq.next_element::<u8>()?.is_some() {
+                    // We don't know the actual length, but we know
+                    // it's more than N.
+                    return Err(Error::invalid_length(
+                        N + 1,
+                        &HexExpected::<N>,
+                    ));
                 }
                 Ok(out)
             }

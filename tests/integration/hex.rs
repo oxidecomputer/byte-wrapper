@@ -83,6 +83,50 @@ fn hex_deserialize_from_seq() {
     assert_eq!(with_attr, SmallHexAttr { x: [1, 2, 3, 4] });
 }
 
+/// Verify that a CBOR array with more elements than `N` is
+/// rejected rather than silently truncated.
+#[test]
+fn hex_deserialize_from_seq_too_long() {
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    struct SmallHex {
+        x: HexArray<4>,
+    }
+
+    #[derive(Debug, Eq, PartialEq, Deserialize)]
+    struct SmallHexAttr {
+        #[serde(with = "HexArray::<4>")]
+        x: [u8; 4],
+    }
+
+    // CBOR encoding of {"x": [1, 2, 3, 4, 5]} — one element
+    // too many for HexArray<4>.
+    let cbor_array = hex!("a1 6178 85 0102030405");
+
+    let err = ciborium::de::from_reader::<SmallHex, _>(&cbor_array[..])
+        .expect_err("trailing elements should be rejected");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("invalid length 5"),
+        "error should report the oversized length, got: {msg}",
+    );
+    assert!(
+        msg.contains("expected a byte array [u8; 4]"),
+        "error should describe the expected type, got: {msg}",
+    );
+
+    let err = ciborium::de::from_reader::<SmallHexAttr, _>(&cbor_array[..])
+        .expect_err("trailing elements should be rejected with attr");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("invalid length 5"),
+        "error should report the oversized length, got: {msg}",
+    );
+    assert!(
+        msg.contains("expected a byte array [u8; 4]"),
+        "error should describe the expected type, got: {msg}",
+    );
+}
+
 /// JSON is human-readable, so `HexArray` expects a hex string,
 /// not an array of integers. Verify that a JSON array is
 /// rejected.

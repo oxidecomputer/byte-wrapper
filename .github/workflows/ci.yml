@@ -6,6 +6,10 @@ on:
 
 name: CI
 
+# Sets permissions of the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
@@ -64,3 +68,34 @@ jobs:
         run: just powerset nextest run
       - name: Doctests
         run: just powerset test --doc
+
+  docs:
+    name: Deploy docs to GitHub Pages
+    # Only deploy on pushes to main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - uses: taiki-e/install-action@just
+      - name: Build rustdoc
+        run: just rustdoc
+      - name: Add redirect to crate docs
+        run: echo '<meta http-equiv="refresh" content="0; url=serde_bytefmt/index.html">' > target/doc/index.html
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+        with:
+          path: target/doc
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

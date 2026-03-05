@@ -22,6 +22,6 @@ generate-readmes:
 ci-cargo-release:
     # cargo-release requires a release off a branch.
     git checkout -B to-release
-    cargo release publish --publish --execute --no-confirm -p serde_bytefmt
+    cargo release publish --publish --execute --no-confirm -p byte-wrapper
     git checkout -
     git branch -D to-release

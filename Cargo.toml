@@ -1,13 +1,13 @@
 [package]
-name = "serde_bytefmt"
-description = "Serialize [u8; N] as bytes or as human-readable strings, depending on the format."
+name = "byte-wrapper"
+description = "Newtype wrappers for byte arrays and vectors with hex and base64 formatting."
 version = "0.1.0"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/oxidecomputer/serde_bytefmt"
-documentation = "https://docs.rs/serde_bytefmt"
+repository = "https://github.com/oxidecomputer/byte-wrapper"
+documentation = "https://docs.rs/byte-wrapper"
 edition = "2024"
 rust-version = "1.85"
-keywords = ["serde", "serialization", "no_std", "bytes", "hex"]
+keywords = ["bytes", "hex", "base64", "serde", "no_std"]
 categories = ["encoding", "no-std"]
 
 [lints.rust]
@@ -28,19 +28,20 @@ pre-release-replacements = [
     { file = "CHANGELOG.md", search = "Unreleased", replace = "[{{version}}]", min = 1 },
     { file = "CHANGELOG.md", search = "ReleaseDate", replace = "{{date}}", min = 1 },
     { file = "CHANGELOG.md", search = "<!-- next-header -->", replace = "<!-- next-header -->\n## Unreleased - ReleaseDate\n", exactly = 1 },
-    { file = "CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[{{version}}]: https://github.com/oxidecomputer/serde_bytefmt/releases/tag/serde_bytefmt-{{version}}", exactly = 1 },
+    { file = "CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[{{version}}]: https://github.com/oxidecomputer/byte-wrapper/releases/tag/byte-wrapper-{{version}}", exactly = 1 },
 ]
 
 [features]
 default = ["alloc"]
-alloc = ["dep:base64", "hex/alloc", "serde_core/alloc"]
+alloc = ["dep:base64", "hex/alloc", "serde_core?/alloc"]
+serde = ["dep:serde_core"]
 schemars08 = ["alloc", "dep:schemars08"]
 
 [dependencies]
 base64 = { version = "0.22", optional = true }
 hex = { version = "0.4", default-features = false }
 schemars08 = { package = "schemars", version = "0.8", optional = true }
-serde_core = { version = "1", default-features = false }
+serde_core = { version = "1", default-features = false, optional = true }
 
 [dev-dependencies]
 hex-literal = "1"

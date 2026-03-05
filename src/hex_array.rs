@@ -22,8 +22,6 @@ use serde_core::{
 /// As a direct field type:
 ///
 /// ```
-/// # #[cfg(feature = "alloc")]
-/// # {
 /// use serde::{Deserialize, Serialize};
 /// use serde_bytefmt::HexArray;
 ///
@@ -31,14 +29,11 @@ use serde_core::{
 /// struct Record {
 ///     checksum: HexArray<32>,
 /// }
-/// # }
 /// ```
 ///
 /// With `#[serde(with)]` on a raw byte array:
 ///
 /// ```
-/// # #[cfg(feature = "alloc")]
-/// # {
 /// use serde::{Deserialize, Serialize};
 /// use serde_bytefmt::HexArray;
 ///
@@ -47,7 +42,6 @@ use serde_core::{
 ///     #[serde(with = "HexArray::<32>")]
 ///     checksum: [u8; 32],
 /// }
-/// # }
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HexArray<const N: usize>(pub [u8; N]);
@@ -79,8 +73,6 @@ impl<const N: usize> HexArray<N> {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "alloc")]
-    /// # {
     /// use serde::{Deserialize, Serialize};
     /// use serde_bytefmt::HexArray;
     ///
@@ -93,9 +85,7 @@ impl<const N: usize> HexArray<N> {
     /// let r = Record { id: [0x01, 0x02, 0x03, 0x04] };
     /// let json = serde_json::to_string(&r).unwrap();
     /// assert_eq!(json, r#"{"id":"01020304"}"#);
-    /// # }
     /// ```
-    #[cfg(feature = "alloc")]
     pub fn serialize<S>(
         bytes: &[u8; N],
         serializer: S,
@@ -114,8 +104,6 @@ impl<const N: usize> HexArray<N> {
     /// # Examples
     ///
     /// ```
-    /// # #[cfg(feature = "alloc")]
-    /// # {
     /// use serde::{Deserialize, Serialize};
     /// use serde_bytefmt::HexArray;
     ///
@@ -127,7 +115,6 @@ impl<const N: usize> HexArray<N> {
     ///
     /// let r: Record = serde_json::from_str(r#"{"id":"01020304"}"#).unwrap();
     /// assert_eq!(r.id, [0x01, 0x02, 0x03, 0x04]);
-    /// # }
     /// ```
     pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; N], D::Error>
     where
@@ -137,18 +124,26 @@ impl<const N: usize> HexArray<N> {
     }
 }
 
+/// Formats a byte slice as lower-case hex.
+struct HexDisplay<'a>(&'a [u8]);
+
+impl fmt::Display for HexDisplay<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in self.0 {
+            write!(f, "{byte:02x}")?;
+        }
+        Ok(())
+    }
+}
+
 /// Serializes a byte slice as lower-case hex if human-readable, or as
 /// raw bytes if not.
-#[cfg(feature = "alloc")]
 fn serialize_lower<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde_core::Serializer,
 {
-    use hex::ToHex;
-
     if serializer.is_human_readable() {
-        let s = bytes.encode_hex::<alloc::string::String>();
-        serializer.serialize_str(&s)
+        serializer.collect_str(&HexDisplay(bytes))
     } else {
         serializer.serialize_bytes(bytes)
     }
@@ -289,7 +284,6 @@ impl<const N: usize> From<HexArray<N>> for [u8; N] {
     }
 }
 
-#[cfg(feature = "alloc")]
 impl<const N: usize> serde_core::Serialize for HexArray<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

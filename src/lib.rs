@@ -14,8 +14,7 @@
 //!
 //! # Types
 //!
-//! * [`HexArray<N>`] encodes a fixed-length byte array as a hex string. (The
-//!   `alloc` feature is required for serialization.)
+//! * [`HexArray<N>`] encodes a fixed-length byte array as a hex string.
 //! * [`Base64Vec`] encodes a variable-length byte vector as a base64 string.
 //!   (The `alloc` feature is required.)
 //!
@@ -27,8 +26,6 @@
 //! Using [`HexArray`] as a field type:
 //!
 //! ```
-//! # #[cfg(feature = "alloc")]
-//! # {
 //! use serde::{Deserialize, Serialize};
 //! use serde_bytefmt::HexArray;
 //!
@@ -36,14 +33,11 @@
 //! struct Record {
 //!     checksum: HexArray<32>,
 //! }
-//! # }
 //! ```
 //!
 //! Using `#[serde(with = "...")]` on an existing byte array:
 //!
 //! ```
-//! # #[cfg(feature = "alloc")]
-//! # {
 //! use serde::{Deserialize, Serialize};
 //! use serde_bytefmt::HexArray;
 //!
@@ -52,13 +46,12 @@
 //!     #[serde(with = "HexArray::<32>")]
 //!     checksum: [u8; 32],
 //! }
-//! # }
 //! ```
 //!
 //! # Features
 //!
-//! - **`alloc`**: enables [`Base64Vec`], as well as
-//!   [`HexArray`] serialization. *Enabled by default.*
+//! - **`alloc`**: enables [`Base64Vec`] and [`HexArray`]
+//!   `Debug`/`Display` impls. *Enabled by default.*
 //! - **`schemars08`**: derives `JsonSchema` for both types.
 //!   *Not enabled by default.*
 

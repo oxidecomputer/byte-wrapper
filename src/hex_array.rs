@@ -182,7 +182,7 @@ where
             type Value = [u8; N];
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "a hex-encoded string {} bytes long", N)
+                write!(f, "a hex string {} hex digits long", N * 2)
             }
 
             fn visit_str<E>(self, data: &str) -> Result<Self::Value, E>
@@ -271,7 +271,7 @@ struct HexStrExpected<const N: usize>;
 
 impl<const N: usize> Expected for HexStrExpected<N> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "a hex string {} characters long", N * 2)
+        write!(f, "a hex string {} hex digits long", N * 2)
     }
 }
 

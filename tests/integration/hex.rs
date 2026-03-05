@@ -138,7 +138,7 @@ fn hex_json_array_rejected() {
         .expect_err("JSON array should not deserialize as HexArray");
     let msg = err.to_string();
     assert!(
-        msg.contains("hex-encoded string"),
+        msg.contains("hex string"),
         "error should mention hex string, got: {msg}",
     );
 
@@ -154,7 +154,7 @@ fn hex_json_array_rejected() {
     );
     let msg = err.to_string();
     assert!(
-        msg.contains("hex-encoded string"),
+        msg.contains("hex string"),
         "error should mention hex string, got: {msg}",
     );
 }
@@ -183,7 +183,7 @@ fn hex_wrong_length_rejected() {
         .expect_err("too-short hex should be rejected");
     let msg = err.to_string();
     assert!(
-        msg.contains("32 characters"),
+        msg.contains("32 hex digits"),
         "error should mention expected length, got: {msg}",
     );
 
@@ -193,7 +193,7 @@ fn hex_wrong_length_rejected() {
         .expect_err("too-long hex should be rejected");
     let msg = err.to_string();
     assert!(
-        msg.contains("32 characters"),
+        msg.contains("32 hex digits"),
         "error should mention expected length, got: {msg}",
     );
 }

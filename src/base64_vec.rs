@@ -1,4 +1,4 @@
-// Copyright (c) The serde_bytefmt Contributors
+// Copyright (c) The byte-wrapper Contributors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! The [`Base64Vec`] newtype wrapper.
@@ -6,44 +6,27 @@
 use alloc::vec::Vec;
 use base64::Engine;
 use core::{error, fmt, str::FromStr};
-use serde_core::{
-    Deserializer, Serializer,
-    de::{SeqAccess, Visitor},
-};
 
-/// A byte vector that serializes as base64 in human-readable formats.
+/// A byte vector that displays and parses as base64.
 ///
-/// This type can be used in two ways:
+/// `Base64Vec` wraps `Vec<u8>`, providing [`Display`](fmt::Display)
+/// and [`FromStr`] implementations that use base64 encoding.
 ///
-/// 1. Directly as a field type, with serde impls built in.
-/// 2. With `#[serde(with = "Base64Vec")]` and
-///    `#[schemars(with = "Base64Vec")]` on a `Vec<u8>` field.
+/// With the **`serde`** feature enabled, it also implements
+/// `Serialize` and `Deserialize` (base64 strings in human-readable
+/// formats, raw bytes in binary formats), and can be used with
+/// `#[serde(with = "Base64Vec")]` on `Vec<u8>` fields.
 ///
 /// # Examples
 ///
-/// As a direct field type:
-///
 /// ```
-/// use serde::{Deserialize, Serialize};
-/// use serde_bytefmt::Base64Vec;
+/// use byte_wrapper::Base64Vec;
 ///
-/// #[derive(Serialize, Deserialize)]
-/// struct Blob {
-///     data: Base64Vec,
-/// }
-/// ```
+/// let b = Base64Vec::new(vec![1, 2, 3]);
+/// assert_eq!(b.to_string(), "AQID");
 ///
-/// With `#[serde(with)]` on a raw byte vector:
-///
-/// ```
-/// use serde::{Deserialize, Serialize};
-/// use serde_bytefmt::Base64Vec;
-///
-/// #[derive(Serialize, Deserialize)]
-/// struct Blob {
-///     #[serde(with = "Base64Vec")]
-///     data: Vec<u8>,
-/// }
+/// let parsed: Base64Vec = "AQID".parse().unwrap();
+/// assert_eq!(*parsed, [1, 2, 3]);
 /// ```
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Base64Vec(pub Vec<u8>);
@@ -59,61 +42,6 @@ impl Base64Vec {
     #[inline]
     pub fn into_inner(self) -> Vec<u8> {
         self.0
-    }
-
-    /// Serializes a byte vector as base64 if the format is human-readable, or
-    /// as raw bytes otherwise.
-    ///
-    /// Intended for use with `#[serde(with = "Base64Vec")]`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use serde::{Deserialize, Serialize};
-    /// use serde_bytefmt::Base64Vec;
-    ///
-    /// #[derive(Serialize, Deserialize)]
-    /// struct Blob {
-    ///     #[serde(with = "Base64Vec")]
-    ///     data: Vec<u8>,
-    /// }
-    ///
-    /// let b = Blob { data: vec![1, 2, 3] };
-    /// let json = serde_json::to_string(&b).unwrap();
-    /// assert_eq!(json, r#"{"data":"AQID"}"#);
-    /// ```
-    pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serialize_bytes(bytes, serializer)
-    }
-
-    /// Deserializes a byte vector from base64 if the format is human-readable,
-    /// or as raw bytes otherwise.
-    ///
-    /// Intended for use with `#[serde(with = "Base64Vec")]`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use serde::{Deserialize, Serialize};
-    /// use serde_bytefmt::Base64Vec;
-    ///
-    /// #[derive(Serialize, Deserialize)]
-    /// struct Blob {
-    ///     #[serde(with = "Base64Vec")]
-    ///     data: Vec<u8>,
-    /// }
-    ///
-    /// let b: Blob = serde_json::from_str(r#"{"data":"AQID"}"#).unwrap();
-    /// assert_eq!(b.data, [1, 2, 3]);
-    /// ```
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserialize_bytes(deserializer)
     }
 }
 
@@ -195,89 +123,6 @@ impl FromStr for Base64Vec {
     }
 }
 
-/// Serializes a byte slice as base64 if human-readable, or as raw
-/// bytes if not.
-fn serialize_bytes<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    if serializer.is_human_readable() {
-        let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
-        serializer.serialize_str(&encoded)
-    } else {
-        serializer.serialize_bytes(bytes)
-    }
-}
-
-/// Deserializes base64 strings (if human-readable) or byte arrays (if
-/// not) to `Vec<u8>`.
-fn deserialize_bytes<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    use serde_core::de::Error;
-
-    if deserializer.is_human_readable() {
-        struct Base64Visitor;
-
-        impl<'de2> Visitor<'de2> for Base64Visitor {
-            type Value = Vec<u8>;
-
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "a base64-encoded string")
-            }
-
-            fn visit_str<E>(self, data: &str) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                base64::engine::general_purpose::STANDARD
-                    .decode(data)
-                    .map_err(Error::custom)
-            }
-        }
-
-        deserializer.deserialize_str(Base64Visitor)
-    } else {
-        struct BytesVisitor;
-
-        impl<'de2> Visitor<'de2> for BytesVisitor {
-            type Value = Vec<u8>;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "a byte array")
-            }
-
-            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                Ok(v.to_vec())
-            }
-
-            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                Ok(v)
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: SeqAccess<'de2>,
-            {
-                let mut out = Vec::with_capacity(seq.size_hint().unwrap_or(0));
-                while let Some(byte) = seq.next_element()? {
-                    out.push(byte);
-                }
-                Ok(out)
-            }
-        }
-
-        deserializer.deserialize_bytes(BytesVisitor)
-    }
-}
-
 impl fmt::Debug for Base64Vec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("Base64Vec")
@@ -336,21 +181,191 @@ impl From<Base64Vec> for Vec<u8> {
     }
 }
 
-impl serde_core::Serialize for Base64Vec {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+#[cfg(feature = "serde")]
+mod serde_impls {
+    use super::Base64Vec;
+    use alloc::vec::Vec;
+    use base64::Engine;
+    use core::fmt;
+    use serde_core::{
+        Deserializer, Serializer,
+        de::{SeqAccess, Visitor},
+    };
+
+    /// Serializes a byte slice as base64 if human-readable, or as
+    /// raw bytes if not.
+    fn serialize_bytes<S>(
+        bytes: &[u8],
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        serialize_bytes(&self.0, serializer)
+        if serializer.is_human_readable() {
+            let encoded =
+                base64::engine::general_purpose::STANDARD.encode(bytes);
+            serializer.serialize_str(&encoded)
+        } else {
+            serializer.serialize_bytes(bytes)
+        }
     }
-}
 
-impl<'de> serde_core::Deserialize<'de> for Base64Vec {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    /// Deserializes base64 strings (if human-readable) or byte
+    /// arrays (if not) to `Vec<u8>`.
+    fn deserialize_bytes<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        deserialize_bytes(deserializer).map(Self)
+        use serde_core::de::Error;
+
+        if deserializer.is_human_readable() {
+            struct Base64Visitor;
+
+            impl<'de2> Visitor<'de2> for Base64Visitor {
+                type Value = Vec<u8>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    write!(f, "a base64-encoded string")
+                }
+
+                fn visit_str<E>(self, data: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    base64::engine::general_purpose::STANDARD
+                        .decode(data)
+                        .map_err(Error::custom)
+                }
+            }
+
+            deserializer.deserialize_str(Base64Visitor)
+        } else {
+            struct BytesVisitor;
+
+            impl<'de2> Visitor<'de2> for BytesVisitor {
+                type Value = Vec<u8>;
+
+                fn expecting(
+                    &self,
+                    formatter: &mut fmt::Formatter,
+                ) -> fmt::Result {
+                    write!(formatter, "a byte array")
+                }
+
+                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    Ok(v.to_vec())
+                }
+
+                fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    Ok(v)
+                }
+
+                fn visit_seq<A>(
+                    self,
+                    mut seq: A,
+                ) -> Result<Self::Value, A::Error>
+                where
+                    A: SeqAccess<'de2>,
+                {
+                    let mut out =
+                        Vec::with_capacity(seq.size_hint().unwrap_or(0));
+                    while let Some(byte) = seq.next_element()? {
+                        out.push(byte);
+                    }
+                    Ok(out)
+                }
+            }
+
+            deserializer.deserialize_bytes(BytesVisitor)
+        }
+    }
+
+    impl Base64Vec {
+        /// Serializes a byte vector as base64 if the format is
+        /// human-readable, or as raw bytes otherwise.
+        ///
+        /// Intended for use with `#[serde(with = "Base64Vec")]`.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use byte_wrapper::Base64Vec;
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// #[derive(Serialize, Deserialize)]
+        /// struct Blob {
+        ///     #[serde(with = "Base64Vec")]
+        ///     data: Vec<u8>,
+        /// }
+        ///
+        /// let b = Blob { data: vec![1, 2, 3] };
+        /// let json = serde_json::to_string(&b).unwrap();
+        /// assert_eq!(json, r#"{"data":"AQID"}"#);
+        /// ```
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+        pub fn serialize<S>(
+            bytes: &[u8],
+            serializer: S,
+        ) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serialize_bytes(bytes, serializer)
+        }
+
+        /// Deserializes a byte vector from base64 if the format is
+        /// human-readable, or as raw bytes otherwise.
+        ///
+        /// Intended for use with `#[serde(with = "Base64Vec")]`.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use byte_wrapper::Base64Vec;
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// #[derive(Serialize, Deserialize)]
+        /// struct Blob {
+        ///     #[serde(with = "Base64Vec")]
+        ///     data: Vec<u8>,
+        /// }
+        ///
+        /// let b: Blob = serde_json::from_str(r#"{"data":"AQID"}"#).unwrap();
+        /// assert_eq!(b.data, [1, 2, 3]);
+        /// ```
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+        pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserialize_bytes(deserializer)
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+    impl serde_core::Serialize for Base64Vec {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serialize_bytes(&self.0, serializer)
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+    impl<'de> serde_core::Deserialize<'de> for Base64Vec {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserialize_bytes(deserializer).map(Self)
+        }
     }
 }
 

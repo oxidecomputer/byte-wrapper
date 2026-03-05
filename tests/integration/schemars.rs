@@ -1,8 +1,8 @@
-// Copyright (c) The serde_bytefmt Contributors
+// Copyright (c) The byte-wrapper Contributors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use byte_wrapper::{Base64Vec, HexArray};
 use schemars08::{self as schemars, JsonSchema, schema_for};
-use serde_bytefmt::{Base64Vec, HexArray};
 
 #[test]
 fn hex_array_schema() {

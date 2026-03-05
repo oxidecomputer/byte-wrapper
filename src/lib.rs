@@ -1,56 +1,75 @@
-// Copyright (c) The serde_bytefmt Contributors
+// Copyright (c) The byte-wrapper Contributors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-//! Serialize byte arrays and vectors as bytes or as human-readable strings,
-//! depending on the format.
+//! Newtype wrappers for byte arrays and vectors with hex and base64
+//! formatting.
 //!
-//! Many binary formats (e.g. [CBOR]) can natively represent byte sequences,
-//! while text formats (e.g. JSON) cannot. This crate bridges the gap: it
-//! serializes byte data as hex or base64 strings in [human-readable formats],
-//! and as efficient raw bytes in binary formats.
+//! This crate provides wrapper types that display byte data in
+//! human-readable encodings. [`HexArray<N>`] encodes fixed-length byte
+//! arrays as hex strings, and [`Base64Vec`] encodes variable-length
+//! byte vectors as base64 strings.
+//!
+//! With the `serde` feature, both types implement `Serialize` and
+//! `Deserialize`, encoding as human-readable strings (hex or base64) in text
+//! formats like JSON, and as efficient raw bytes in binary formats like [CBOR].
+//! You do not have to use the newtypes in your own type definitions; you can
+//! refer to them via `#[serde(with = "...")]` instead.
 //!
 //! [CBOR]: https://cbor.io/
-//! [human-readable formats]: https://docs.rs/serde_core/latest/serde_core/trait.Serializer.html#method.is_human_readable
 //!
 //! # Types
 //!
-//! * [`HexArray<N>`] encodes a fixed-length byte array as a hex string.
-//! * [`Base64Vec`] encodes a variable-length byte vector as a base64 string.
-//!   (The `alloc` feature is required.)
-//!
-//! These types can be used directly as struct fields, or be applied to
-//! existing `[u8; N]` / `Vec<u8>` fields via `#[serde(with = "...")]`.
+//! * [`HexArray<N>`] encodes a fixed-length byte array as a hex
+//!   string.
+//! * [`Base64Vec`] encodes a variable-length byte vector as a base64
+//!   string. (The `alloc` feature is required.)
 //!
 //! # Examples
 //!
-//! Using [`HexArray`] as a field type:
+//! ```
+//! use byte_wrapper::HexArray;
+//!
+//! let h = HexArray::new([0x01, 0x02, 0xab, 0xff]);
+//! assert_eq!(h.to_string(), "0102abff");
+//!
+//! let parsed: HexArray<4> = "0102abff".parse().unwrap();
+//! assert_eq!(parsed, h);
+//! ```
+//!
+//! With the **`serde`** feature:
 //!
 //! ```
+//! # #[cfg(feature = "serde")] {
+//! use byte_wrapper::HexArray;
 //! use serde::{Deserialize, Serialize};
-//! use serde_bytefmt::HexArray;
 //!
 //! #[derive(Serialize, Deserialize)]
 //! struct Record {
 //!     checksum: HexArray<32>,
 //! }
+//! # }
 //! ```
 //!
 //! Using `#[serde(with = "...")]` on an existing byte array:
 //!
 //! ```
+//! # #[cfg(feature = "serde")] {
+//! use byte_wrapper::HexArray;
 //! use serde::{Deserialize, Serialize};
-//! use serde_bytefmt::HexArray;
 //!
 //! #[derive(Serialize, Deserialize)]
 //! struct Record {
 //!     #[serde(with = "HexArray::<32>")]
 //!     checksum: [u8; 32],
 //! }
+//! # }
 //! ```
 //!
 //! # Features
 //!
 //! - **`alloc`**: enables [`Base64Vec`]. *Enabled by default.*
+//! - **`serde`**: implements `Serialize` and `Deserialize` for both
+//!   types. *Not enabled by default.*
 //! - **`schemars08`**: derives `JsonSchema` for both types.
 //!   *Not enabled by default.*
 

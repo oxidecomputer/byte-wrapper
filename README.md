@@ -1,39 +1,53 @@
 <!-- cargo-sync-rdme title [[ -->
-# serde_bytefmt
+# byte-wrapper
 <!-- cargo-sync-rdme ]] -->
 
 <!-- cargo-sync-rdme badge [[ -->
-![License: MIT OR Apache-2.0](https://img.shields.io/crates/l/serde_bytefmt.svg?)
-[![crates.io](https://img.shields.io/crates/v/serde_bytefmt.svg?logo=rust)](https://crates.io/crates/serde_bytefmt)
-[![docs.rs](https://img.shields.io/docsrs/serde_bytefmt.svg?logo=docs.rs)](https://docs.rs/serde_bytefmt)
+![License: MIT OR Apache-2.0](https://img.shields.io/crates/l/byte-wrapper.svg?)
+[![crates.io](https://img.shields.io/crates/v/byte-wrapper.svg?logo=rust)](https://crates.io/crates/byte-wrapper)
+[![docs.rs](https://img.shields.io/docsrs/byte-wrapper.svg?logo=docs.rs)](https://docs.rs/byte-wrapper)
 [![Rust: ^1.85.0](https://img.shields.io/badge/rust-^1.85.0-93450a.svg?logo=rust)](https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field)
 <!-- cargo-sync-rdme ]] -->
 
 <!-- cargo-sync-rdme rustdoc [[ -->
-Serialize byte arrays and vectors as bytes or as human-readable strings,
-depending on the format.
+Newtype wrappers for byte arrays and vectors with hex and base64
+formatting.
 
-Many binary formats (e.g. [CBOR]) can natively represent byte sequences,
-while text formats (e.g. JSON) cannot. This crate bridges the gap: it
-serializes byte data as hex or base64 strings in [human-readable formats],
-and as efficient raw bytes in binary formats.
+This crate provides wrapper types that display byte data in
+human-readable encodings. [`HexArray<N>`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html) encodes fixed-length byte
+arrays as hex strings, and [`Base64Vec`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html) encodes variable-length
+byte vectors as base64 strings.
+
+With the `serde` feature, both types implement `Serialize` and
+`Deserialize`, encoding as human-readable strings (hex or base64) in text
+formats like JSON, and as efficient raw bytes in binary formats like [CBOR].
+You do not have to use the newtypes in your own type definitions; you can
+refer to them via `#[serde(with = "...")]` instead.
 
 ## Types
 
-* [`HexArray<N>`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array/struct.HexArray.html) encodes a fixed-length byte array as a hex string.
-* [`Base64Vec`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/base64_vec/struct.Base64Vec.html) encodes a variable-length byte vector as a base64 string.
-  (The `alloc` feature is required.)
-
-These types can be used directly as struct fields, or be applied to
-existing `[u8; N]` / `Vec<u8>` fields via `#[serde(with = "...")]`.
+* [`HexArray<N>`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html) encodes a fixed-length byte array as a hex
+  string.
+* [`Base64Vec`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html) encodes a variable-length byte vector as a base64
+  string. (The `alloc` feature is required.)
 
 ## Examples
 
-Using [`HexArray`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/hex_array/struct.HexArray.html) as a field type:
+````rust
+use byte_wrapper::HexArray;
+
+let h = HexArray::new([0x01, 0x02, 0xab, 0xff]);
+assert_eq!(h.to_string(), "0102abff");
+
+let parsed: HexArray<4> = "0102abff".parse().unwrap();
+assert_eq!(parsed, h);
+````
+
+With the **`serde`** feature:
 
 ````rust
+use byte_wrapper::HexArray;
 use serde::{Deserialize, Serialize};
-use serde_bytefmt::HexArray;
 
 #[derive(Serialize, Deserialize)]
 struct Record {
@@ -44,8 +58,8 @@ struct Record {
 Using `#[serde(with = "...")]` on an existing byte array:
 
 ````rust
+use byte_wrapper::HexArray;
 use serde::{Deserialize, Serialize};
-use serde_bytefmt::HexArray;
 
 #[derive(Serialize, Deserialize)]
 struct Record {
@@ -56,12 +70,13 @@ struct Record {
 
 ## Features
 
-* **`alloc`**: enables [`Base64Vec`](https://docs.rs/serde_bytefmt/0.1.0/serde_bytefmt/base64_vec/struct.Base64Vec.html). *Enabled by default.*
+* **`alloc`**: enables [`Base64Vec`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html). *Enabled by default.*
+* **`serde`**: implements `Serialize` and `Deserialize` for both
+  types. *Not enabled by default.*
 * **`schemars08`**: derives `JsonSchema` for both types.
   *Not enabled by default.*
 
 [CBOR]: https://cbor.io/
-[human-readable formats]: https://docs.rs/serde_core/latest/serde_core/trait.Serializer.html#method.is_human_readable
 <!-- cargo-sync-rdme ]] -->
 
 ## License

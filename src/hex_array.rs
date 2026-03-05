@@ -1,4 +1,4 @@
-// Copyright (c) The serde_bytefmt Contributors
+// Copyright (c) The byte-wrapper Contributors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 //! The [`HexArray`] newtype wrapper.
@@ -9,44 +9,29 @@ use core::{
     fmt::{self, Write},
     str::FromStr,
 };
-use serde_core::{
-    Deserializer,
-    de::{Expected, SeqAccess, Visitor},
-};
 
-/// A byte array that serializes as hex in human-readable formats.
+/// A byte array that displays and parses as hex.
 ///
-/// This type can be used in two ways:
+/// `HexArray<N>` wraps `[u8; N]`, providing [`Display`](fmt::Display),
+/// [`FromStr`], [`LowerHex`](fmt::LowerHex), and
+/// [`UpperHex`](fmt::UpperHex) implementations that use hexadecimal
+/// encoding.
 ///
-/// 1. Directly as a field type, with serde impls built in.
-/// 2. With `#[serde(with = "HexArray::<N>")]` and
-///    `#[schemars(with = "HexArray<N>")]` on a `[u8; N]` field.
+/// With the **`serde`** feature enabled, it also implements
+/// `Serialize` and `Deserialize` (hex strings in human-readable
+/// formats, raw bytes in binary formats), and can be used with
+/// `#[serde(with = "HexArray::<N>")]` on `[u8; N]` fields.
 ///
 /// # Examples
 ///
-/// As a direct field type:
-///
 /// ```
-/// use serde::{Deserialize, Serialize};
-/// use serde_bytefmt::HexArray;
+/// use byte_wrapper::HexArray;
 ///
-/// #[derive(Serialize, Deserialize)]
-/// struct Record {
-///     checksum: HexArray<32>,
-/// }
-/// ```
+/// let h = HexArray::new([0x01, 0x02, 0xab, 0xff]);
+/// assert_eq!(h.to_string(), "0102abff");
 ///
-/// With `#[serde(with)]` on a raw byte array:
-///
-/// ```
-/// use serde::{Deserialize, Serialize};
-/// use serde_bytefmt::HexArray;
-///
-/// #[derive(Serialize, Deserialize)]
-/// struct Record {
-///     #[serde(with = "HexArray::<32>")]
-///     checksum: [u8; 32],
-/// }
+/// let parsed: HexArray<4> = "0102abff".parse().unwrap();
+/// assert_eq!(parsed, h);
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct HexArray<const N: usize>(pub [u8; N]);
@@ -69,64 +54,6 @@ impl<const N: usize> HexArray<N> {
     pub const fn into_inner(self) -> [u8; N] {
         self.0
     }
-
-    /// Serializes a byte array as hex in human-readable formats, or as raw
-    /// bytes otherwise.
-    ///
-    /// Intended for use with `#[serde(with = "HexArray::<N>")]`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use serde::{Deserialize, Serialize};
-    /// use serde_bytefmt::HexArray;
-    ///
-    /// #[derive(Serialize, Deserialize)]
-    /// struct Record {
-    ///     #[serde(with = "HexArray::<4>")]
-    ///     id: [u8; 4],
-    /// }
-    ///
-    /// let r = Record { id: [0x01, 0x02, 0x03, 0x04] };
-    /// let json = serde_json::to_string(&r).unwrap();
-    /// assert_eq!(json, r#"{"id":"01020304"}"#);
-    /// ```
-    pub fn serialize<S>(
-        bytes: &[u8; N],
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: serde_core::Serializer,
-    {
-        serialize_lower(bytes, serializer)
-    }
-
-    /// Deserializes a byte array from hex if the format is human-readable, or as
-    /// raw bytes otherwise.
-    ///
-    /// Intended for use with `#[serde(with = "HexArray::<N>")]`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use serde::{Deserialize, Serialize};
-    /// use serde_bytefmt::HexArray;
-    ///
-    /// #[derive(Serialize, Deserialize)]
-    /// struct Record {
-    ///     #[serde(with = "HexArray::<4>")]
-    ///     id: [u8; 4],
-    /// }
-    ///
-    /// let r: Record = serde_json::from_str(r#"{"id":"01020304"}"#).unwrap();
-    /// assert_eq!(r.id, [0x01, 0x02, 0x03, 0x04]);
-    /// ```
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; N], D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserialize(deserializer)
-    }
 }
 
 /// Formats a byte slice as lower-case hex.
@@ -147,131 +74,6 @@ impl fmt::Display for HexDisplay<'_> {
 impl fmt::Debug for HexDisplay<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
-    }
-}
-
-/// Serializes a byte slice as lower-case hex if human-readable, or as
-/// raw bytes if not.
-fn serialize_lower<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde_core::Serializer,
-{
-    if serializer.is_human_readable() {
-        serializer.collect_str(&HexDisplay(bytes))
-    } else {
-        serializer.serialize_bytes(bytes)
-    }
-}
-
-/// Deserializes hex strings (if human-readable) or byte arrays (if not)
-/// to `[u8; N]`.
-fn deserialize<'de, D, const N: usize>(
-    deserializer: D,
-) -> Result<[u8; N], D::Error>
-where
-    D: Deserializer<'de>,
-{
-    use serde_core::de::Error;
-
-    if deserializer.is_human_readable() {
-        // hex::FromHex doesn't have an implementation for
-        // const-generic N, so do our own thing.
-        struct HexVisitor<const N: usize>;
-
-        impl<'de2, const N: usize> Visitor<'de2> for HexVisitor<N> {
-            type Value = [u8; N];
-
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "a hex string {} hex digits long", N * 2)
-            }
-
-            fn visit_str<E>(self, data: &str) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                let expected_len = N * 2;
-                if data.len() != expected_len {
-                    return Err(E::invalid_length(
-                        data.len(),
-                        &HexStrExpected::<N>,
-                    ));
-                }
-                let mut out = [0u8; N];
-                hex::decode_to_slice(data, &mut out).map_err(Error::custom)?;
-                Ok(out)
-            }
-        }
-
-        deserializer.deserialize_str(HexVisitor)
-    } else {
-        struct BytesVisitor<const N: usize>;
-
-        impl<'de2, const N: usize> Visitor<'de2> for BytesVisitor<N> {
-            type Value = [u8; N];
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "a byte array [u8; {}]", N)
-            }
-
-            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-            where
-                E: Error,
-            {
-                v.try_into()
-                    .map_err(|_| E::invalid_length(v.len(), &HexExpected::<N>))
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: SeqAccess<'de2>,
-            {
-                // Reject early if the sequence reports a wrong
-                // length.
-                if let Some(len) = seq.size_hint() {
-                    if len != N {
-                        return Err(Error::invalid_length(
-                            len,
-                            &HexExpected::<N>,
-                        ));
-                    }
-                }
-                let mut out = [0u8; N];
-                for (i, byte) in out.iter_mut().enumerate() {
-                    *byte = seq.next_element()?.ok_or_else(|| {
-                        Error::invalid_length(i, &HexExpected::<N>)
-                    })?;
-                }
-                // Reject trailing elements rather than silently
-                // discarding them.
-                if seq.next_element::<u8>()?.is_some() {
-                    // We don't know the actual length, but we know
-                    // it's more than N.
-                    return Err(Error::invalid_length(
-                        N + 1,
-                        &HexExpected::<N>,
-                    ));
-                }
-                Ok(out)
-            }
-        }
-
-        deserializer.deserialize_bytes(BytesVisitor)
-    }
-}
-
-struct HexExpected<const N: usize>;
-
-impl<const N: usize> Expected for HexExpected<N> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "a byte array [u8; {}]", N)
-    }
-}
-
-struct HexStrExpected<const N: usize>;
-
-impl<const N: usize> Expected for HexStrExpected<N> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "a hex string {} hex digits long", N * 2)
     }
 }
 
@@ -330,8 +132,8 @@ impl<const N: usize> FromStr for HexArray<N> {
                 hex::FromHexError::InvalidHexCharacter { c, index } => {
                     ParseHexError::InvalidHexCharacter { c, index }
                 }
-                // The length is already validated above, so this branch is
-                // unreachable in practice.
+                // The length is already validated above, so this
+                // branch is unreachable in practice.
                 hex::FromHexError::OddLength
                 | hex::FromHexError::InvalidStringLength => {
                     ParseHexError::InvalidLength { expected, actual: s.len() }
@@ -461,21 +263,233 @@ impl<const N: usize> TryFrom<&[u8]> for HexArray<N> {
     }
 }
 
-impl<const N: usize> serde_core::Serialize for HexArray<N> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+#[cfg(feature = "serde")]
+mod serde_impls {
+    use super::{HexArray, HexDisplay};
+    use core::fmt;
+    use serde_core::{
+        Deserializer,
+        de::{Expected, SeqAccess, Visitor},
+    };
+
+    /// Serializes a byte slice as lower-case hex if human-readable,
+    /// or as raw bytes if not.
+    fn serialize_lower<S>(
+        bytes: &[u8],
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: serde_core::Serializer,
     {
-        serialize_lower(&self.0, serializer)
+        if serializer.is_human_readable() {
+            serializer.collect_str(&HexDisplay(bytes))
+        } else {
+            serializer.serialize_bytes(bytes)
+        }
     }
-}
 
-impl<'de, const N: usize> serde_core::Deserialize<'de> for HexArray<N> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    struct HexExpected<const N: usize>;
+
+    impl<const N: usize> Expected for HexExpected<N> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "a byte array [u8; {}]", N)
+        }
+    }
+
+    struct HexStrExpected<const N: usize>;
+
+    impl<const N: usize> Expected for HexStrExpected<N> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "a hex string {} hex digits long", N * 2)
+        }
+    }
+
+    /// Deserializes hex strings (if human-readable) or byte arrays
+    /// (if not) to `[u8; N]`.
+    fn deserialize<'de, D, const N: usize>(
+        deserializer: D,
+    ) -> Result<[u8; N], D::Error>
     where
         D: Deserializer<'de>,
     {
-        deserialize(deserializer).map(Self)
+        use serde_core::de::Error;
+
+        if deserializer.is_human_readable() {
+            // hex::FromHex doesn't have an implementation for
+            // const-generic N, so do our own thing.
+            struct HexVisitor<const N: usize>;
+
+            impl<'de2, const N: usize> Visitor<'de2> for HexVisitor<N> {
+                type Value = [u8; N];
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    write!(f, "a hex string {} hex digits long", N * 2)
+                }
+
+                fn visit_str<E>(self, data: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    let expected_len = N * 2;
+                    if data.len() != expected_len {
+                        return Err(E::invalid_length(
+                            data.len(),
+                            &HexStrExpected::<N>,
+                        ));
+                    }
+                    let mut out = [0u8; N];
+                    hex::decode_to_slice(data, &mut out)
+                        .map_err(Error::custom)?;
+                    Ok(out)
+                }
+            }
+
+            deserializer.deserialize_str(HexVisitor)
+        } else {
+            struct BytesVisitor<const N: usize>;
+
+            impl<'de2, const N: usize> Visitor<'de2> for BytesVisitor<N> {
+                type Value = [u8; N];
+
+                fn expecting(
+                    &self,
+                    formatter: &mut fmt::Formatter,
+                ) -> fmt::Result {
+                    write!(formatter, "a byte array [u8; {}]", N)
+                }
+
+                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    v.try_into().map_err(|_| {
+                        E::invalid_length(v.len(), &HexExpected::<N>)
+                    })
+                }
+
+                fn visit_seq<A>(
+                    self,
+                    mut seq: A,
+                ) -> Result<Self::Value, A::Error>
+                where
+                    A: SeqAccess<'de2>,
+                {
+                    // Reject early if the sequence reports a
+                    // wrong length.
+                    if let Some(len) = seq.size_hint() {
+                        if len != N {
+                            return Err(Error::invalid_length(
+                                len,
+                                &HexExpected::<N>,
+                            ));
+                        }
+                    }
+                    let mut out = [0u8; N];
+                    for (i, byte) in out.iter_mut().enumerate() {
+                        *byte = seq.next_element()?.ok_or_else(|| {
+                            Error::invalid_length(i, &HexExpected::<N>)
+                        })?;
+                    }
+                    // Reject trailing elements rather than
+                    // silently discarding them.
+                    if seq.next_element::<u8>()?.is_some() {
+                        // We don't know the actual length, but
+                        // we know it's more than N.
+                        return Err(Error::invalid_length(
+                            N + 1,
+                            &HexExpected::<N>,
+                        ));
+                    }
+                    Ok(out)
+                }
+            }
+
+            deserializer.deserialize_bytes(BytesVisitor)
+        }
+    }
+
+    impl<const N: usize> HexArray<N> {
+        /// Serializes a byte array as hex in human-readable formats,
+        /// or as raw bytes otherwise.
+        ///
+        /// Intended for use with
+        /// `#[serde(with = "HexArray::<N>")]`.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use byte_wrapper::HexArray;
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// #[derive(Serialize, Deserialize)]
+        /// struct Record {
+        ///     #[serde(with = "HexArray::<4>")]
+        ///     id: [u8; 4],
+        /// }
+        ///
+        /// let r = Record { id: [0x01, 0x02, 0x03, 0x04] };
+        /// let json = serde_json::to_string(&r).unwrap();
+        /// assert_eq!(json, r#"{"id":"01020304"}"#);
+        /// ```
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+        pub fn serialize<S>(
+            bytes: &[u8; N],
+            serializer: S,
+        ) -> Result<S::Ok, S::Error>
+        where
+            S: serde_core::Serializer,
+        {
+            serialize_lower(bytes, serializer)
+        }
+
+        /// Deserializes a byte array from hex if the format is
+        /// human-readable, or as raw bytes otherwise.
+        ///
+        /// Intended for use with
+        /// `#[serde(with = "HexArray::<N>")]`.
+        ///
+        /// # Examples
+        ///
+        /// ```
+        /// use byte_wrapper::HexArray;
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// #[derive(Serialize, Deserialize)]
+        /// struct Record {
+        ///     #[serde(with = "HexArray::<4>")]
+        ///     id: [u8; 4],
+        /// }
+        ///
+        /// let r: Record = serde_json::from_str(r#"{"id":"01020304"}"#).unwrap();
+        /// assert_eq!(r.id, [0x01, 0x02, 0x03, 0x04]);
+        /// ```
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+        pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; N], D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserialize(deserializer)
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+    impl<const N: usize> serde_core::Serialize for HexArray<N> {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde_core::Serializer,
+        {
+            serialize_lower(&self.0, serializer)
+        }
+    }
+
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "serde")))]
+    impl<'de, const N: usize> serde_core::Deserialize<'de> for HexArray<N> {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            deserialize(deserializer).map(Self)
+        }
     }
 }
 

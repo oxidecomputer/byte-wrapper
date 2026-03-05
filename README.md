@@ -6,7 +6,7 @@
 ![License: MIT OR Apache-2.0](https://img.shields.io/crates/l/byte-wrapper.svg?)
 [![crates.io](https://img.shields.io/crates/v/byte-wrapper.svg?logo=rust)](https://crates.io/crates/byte-wrapper)
 [![docs.rs](https://img.shields.io/docsrs/byte-wrapper.svg?logo=docs.rs)](https://docs.rs/byte-wrapper)
-[![Rust: ^1.85.0](https://img.shields.io/badge/rust-^1.85.0-93450a.svg?logo=rust)](https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field)
+[![Rust: ^1.88.0](https://img.shields.io/badge/rust-^1.88.0-93450a.svg?logo=rust)](https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field)
 <!-- cargo-sync-rdme ]] -->
 
 <!-- cargo-sync-rdme rustdoc [[ -->

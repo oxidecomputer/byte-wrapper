@@ -15,6 +15,11 @@
 //! You do not have to use the newtypes in your own type definitions; you can
 //! refer to them via `#[serde(with = "...")]` instead.
 //!
+//! With the `schemars08` feature, both types implement [`JsonSchema`],
+//! including automatic opt-in replacement with
+//! [typify](https://crates.io/crates/typify) and
+//! [progenitor](https://crates.io/crates/progenitor).
+//!
 //! [CBOR]: https://cbor.io/
 //!
 //! # Types

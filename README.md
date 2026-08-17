@@ -14,8 +14,8 @@ Newtype wrappers for byte arrays and vectors with hex and base64
 formatting.
 
 This crate provides wrapper types that display byte data in
-human-readable encodings. [`HexArray<N>`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html) encodes fixed-length byte
-arrays as hex strings, and [`Base64Vec`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html) encodes variable-length
+human-readable encodings. [`HexArray<N>`] encodes fixed-length byte
+arrays as hex strings, and [`Base64Vec`] encodes variable-length
 byte vectors as base64 strings.
 
 With the `serde` feature, both types implement `Serialize` and
@@ -31,9 +31,9 @@ including automatic opt-in replacement with
 
 ## Types
 
-* [`HexArray<N>`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html) encodes a fixed-length byte array as a hex
+* [`HexArray<N>`] encodes a fixed-length byte array as a hex
   string. (Requires the `hex` feature.)
-* [`Base64Vec`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html) encodes a variable-length byte vector as a base64
+* [`Base64Vec`] encodes a variable-length byte vector as a base64
   string. (Requires the `base64` feature.)
 
 ## Examples
@@ -106,8 +106,8 @@ The closest alternatives are:
 
 ## Features
 
-* **`hex`**: enables [`HexArray`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html). *Enabled by default.*
-* **`base64`**: enables [`Base64Vec`](https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html) (implies `alloc`).
+* **`hex`**: enables [`HexArray`]. *Enabled by default.*
+* **`base64`**: enables [`Base64Vec`] (implies `alloc`).
   *Enabled by default.*
 * **`alloc`**: enables `alloc` support (required by `base64`).
 * **`serde`**: implements `Serialize` and `Deserialize` for
@@ -115,6 +115,8 @@ The closest alternatives are:
 * **`schemars08`**: derives `JsonSchema` for enabled types.
   *Not enabled by default.*
 
+[`HexArray<N>`]: https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
+[`Base64Vec`]: https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html "struct byte_wrapper::base64_vec::Base64Vec"
 [CBOR]: https://cbor.io/
 [`JsonSchema`]: https://docs.rs/schemars/0.8/schemars/trait.JsonSchema.html
 [`serde-human-bytes`]: https://docs.rs/serde-human-bytes
@@ -124,9 +126,10 @@ The closest alternatives are:
 [`hexutil`]: https://docs.rs/hexutil
 [`serde-bytes-repr`]: https://docs.rs/serde-bytes-repr
 [`is_human_readable()`]: https://docs.rs/serde/latest/serde/trait.Serializer.html#method.is_human_readable
-[`Display`]: https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html
-[`FromStr`]: https://doc.rust-lang.org/nightly/core/str/traits/trait.FromStr.html
-[`Deref`]: https://doc.rust-lang.org/nightly/core/ops/deref/trait.Deref.html
+[`Display`]: https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html "trait core::fmt::Display"
+[`FromStr`]: https://doc.rust-lang.org/nightly/core/str/traits/trait.FromStr.html "trait core::str::traits::FromStr"
+[`Deref`]: https://doc.rust-lang.org/nightly/core/ops/deref/trait.Deref.html "trait core::ops::deref::Deref"
+[`HexArray`]: https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
 <!-- cargo-sync-rdme ]] -->
 
 ## License

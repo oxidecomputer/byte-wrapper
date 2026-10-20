@@ -126,7 +126,9 @@
 //! - **`serde`**: implements `Serialize` and `Deserialize` for
 //!   enabled types. *Not enabled by default.*
 //! - **`schemars08`**: derives `JsonSchema` for enabled types.
-//!   *Not enabled by default.*
+//!   Requires `std`. *Not enabled by default.*
+//!
+//! All features other than `schemars08` are compatible with `no_std`.
 
 #![deny(missing_docs)]
 #![no_std]

@@ -37,6 +37,25 @@ fn base64_from_str_invalid_length() {
     assert_eq!(err, ParseBase64Error::InvalidLength { length: 1 });
 }
 
+#[test]
+fn base64_from_str_invalid_last_symbol() {
+    // "QQ==" is an encoding of [0x41]. "QR==" sets trailing bits.
+    let err = "QR==".parse::<Base64Vec>().expect_err("invalid last symbol");
+    assert_eq!(
+        err,
+        ParseBase64Error::InvalidLastSymbol { offset: 1, byte: b'R' },
+        "got: {err}",
+    );
+    assert!(err.to_string().contains("offset 1"), "got: {err}");
+}
+
+#[test]
+fn base64_from_str_invalid_padding() {
+    // The standard engine requires canonical padding.
+    let err = "QQ".parse::<Base64Vec>().expect_err("missing padding");
+    assert_eq!(err, ParseBase64Error::InvalidPadding);
+}
+
 // -- Display and Debug formatting tests --
 
 #[test]

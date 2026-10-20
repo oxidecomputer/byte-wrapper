@@ -49,7 +49,7 @@ schemars08 = ["alloc", "dep:schemars08", "dep:serde_json"]
 serde = ["dep:serde_core"]
 
 [dependencies]
-base64 = { version = "0.22", optional = true }
+base64 = { version = "0.23", default-features = false, features = ["alloc"], optional = true }
 hex = { version = "0.4", default-features = false, optional = true }
 schemars08 = { package = "schemars", version = "0.8", optional = true }
 serde_core = { version = "1", default-features = false, optional = true }

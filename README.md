@@ -79,7 +79,7 @@ Several crates solve parts of this problem, often using slightly
 different approaches from `byte-wrapper`.
 
 |feature|`byte-wrapper`|[`serde-human-bytes`] 0.1.2|[`serde-encoded-bytes`] 0.2.1|[`serde_with`] 3.17.0|[`hex-buffer-serde`] 0.4.0|[`hexutil`] 0.1.0|[`serde-bytes-repr`] 0.3.0|
-|-------|--------------|-------------------------|---------------------------|-------------------|------------------------|---------------|------------------------|
+|-------|--------------|------|------|-------|------|------|------|
 |newtype wrappers|yes|yes (hex only)|no|no|no|no|no|
 |[`is_human_readable()`] switch|yes|yes|yes|no|yes|yes|no|
 |[`Display`] / [`FromStr`] / [`Deref`]|yes|[`Deref`] only|no|no|no|[`Display`] / [`FromStr`] via macro|no|
@@ -113,7 +113,9 @@ The closest alternatives are:
 * **`serde`**: implements `Serialize` and `Deserialize` for
   enabled types. *Not enabled by default.*
 * **`schemars08`**: derives `JsonSchema` for enabled types.
-  *Not enabled by default.*
+  Requires `std`. *Not enabled by default.*
+
+All features other than `schemars08` are compatible with `no_std`.
 
 [`HexArray<N>`]: https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
 [`Base64Vec`]: https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/base64_vec/struct.Base64Vec.html "struct byte_wrapper::base64_vec::Base64Vec"
@@ -126,9 +128,9 @@ The closest alternatives are:
 [`hexutil`]: https://docs.rs/hexutil
 [`serde-bytes-repr`]: https://docs.rs/serde-bytes-repr
 [`is_human_readable()`]: https://docs.rs/serde/latest/serde/trait.Serializer.html#method.is_human_readable
-[`Display`]: https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html "trait core::fmt::Display"
-[`FromStr`]: https://doc.rust-lang.org/nightly/core/str/traits/trait.FromStr.html "trait core::str::traits::FromStr"
-[`Deref`]: https://doc.rust-lang.org/nightly/core/ops/deref/trait.Deref.html "trait core::ops::deref::Deref"
+[`Display`]: https://doc.rust-lang.org/stable/core/fmt/trait.Display.html "trait core::fmt::Display"
+[`FromStr`]: https://doc.rust-lang.org/stable/core/str/traits/trait.FromStr.html "trait core::str::traits::FromStr"
+[`Deref`]: https://doc.rust-lang.org/stable/core/ops/deref/trait.Deref.html "trait core::ops::deref::Deref"
 [`HexArray`]: https://docs.rs/byte-wrapper/0.1.0/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
 <!-- cargo-sync-rdme ]] -->
 

@@ -36,7 +36,7 @@ jobs:
       - name: Install nightly toolchain for cargo-sync-rdme
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2026-04-30
+          toolchain: nightly-2026-09-30
       - name: Regenerate readmes
         run: just generate-readmes
       - name: Check for differences
@@ -68,6 +68,23 @@ jobs:
         run: just powerset nextest run
       - name: Doctests
         run: just powerset test --doc
+
+  no-std:
+    name: Build for no_std
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabi
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+      - uses: taiki-e/install-action@cargo-hack
+      - uses: taiki-e/install-action@just
+      # schemars 0.8 requires std, so exclude it here.
+      - name: Build for a no_std target
+        run: just powerset --exclude-features schemars08 check --target thumbv7em-none-eabi
 
   docs:
     name: Deploy docs to GitHub Pages

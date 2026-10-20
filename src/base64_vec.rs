@@ -107,9 +107,11 @@ fn from_decode_error(e: base64::DecodeError) -> ParseBase64Error {
         base64::DecodeError::InvalidLength(length) => {
             ParseBase64Error::InvalidLength { length }
         }
-        base64::DecodeError::InvalidLastSymbol(offset, byte) => {
-            ParseBase64Error::InvalidLastSymbol { offset, byte }
-        }
+        base64::DecodeError::InvalidLastSymbol {
+            offset,
+            symbol,
+            symbol_value: _,
+        } => ParseBase64Error::InvalidLastSymbol { offset, byte: symbol },
         base64::DecodeError::InvalidPadding => ParseBase64Error::InvalidPadding,
     }
 }

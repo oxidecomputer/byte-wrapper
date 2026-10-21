@@ -125,13 +125,13 @@ The closest alternatives are:
 
 All features other than `schemars08` are compatible with `no_std`.
 
-[`HexArray<N>`]: https://docs.rs/byte-wrapper/0.2.0/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
-[`Base64Vec`]: https://docs.rs/byte-wrapper/0.2.0/byte_wrapper/base64_vec/struct.Base64Vec.html "struct byte_wrapper::base64_vec::Base64Vec"
+[`HexArray<N>`]: https://docs.rs/byte-wrapper/0.2.1/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
+[`Base64Vec`]: https://docs.rs/byte-wrapper/0.2.1/byte_wrapper/base64_vec/struct.Base64Vec.html "struct byte_wrapper::base64_vec::Base64Vec"
 [CBOR]: https://cbor.io/
 [`JsonSchema`]: https://docs.rs/schemars/0.8/schemars/trait.JsonSchema.html
-[`HexSlice`]: https://docs.rs/byte-wrapper/0.2.0/byte_wrapper/hex_slice/struct.HexSlice.html "struct byte_wrapper::hex_slice::HexSlice"
-[`HexVec`]: https://docs.rs/byte-wrapper/0.2.0/byte_wrapper/hex_vec/struct.HexVec.html "struct byte_wrapper::hex_vec::HexVec"
-[`Base64Slice`]: https://docs.rs/byte-wrapper/0.2.0/byte_wrapper/base64_slice/struct.Base64Slice.html "struct byte_wrapper::base64_slice::Base64Slice"
+[`HexSlice`]: https://docs.rs/byte-wrapper/0.2.1/byte_wrapper/hex_slice/struct.HexSlice.html "struct byte_wrapper::hex_slice::HexSlice"
+[`HexVec`]: https://docs.rs/byte-wrapper/0.2.1/byte_wrapper/hex_vec/struct.HexVec.html "struct byte_wrapper::hex_vec::HexVec"
+[`Base64Slice`]: https://docs.rs/byte-wrapper/0.2.1/byte_wrapper/base64_slice/struct.Base64Slice.html "struct byte_wrapper::base64_slice::Base64Slice"
 [`serde-human-bytes`]: https://docs.rs/serde-human-bytes
 [`serde-encoded-bytes`]: https://docs.rs/serde-encoded-bytes
 [`serde_with`]: https://docs.rs/serde_with
@@ -142,7 +142,7 @@ All features other than `schemars08` are compatible with `no_std`.
 [`Display`]: https://doc.rust-lang.org/stable/core/fmt/trait.Display.html "trait core::fmt::Display"
 [`FromStr`]: https://doc.rust-lang.org/stable/core/str/traits/trait.FromStr.html "trait core::str::traits::FromStr"
 [`Deref`]: https://doc.rust-lang.org/stable/core/ops/deref/trait.Deref.html "trait core::ops::deref::Deref"
-[`HexArray`]: https://docs.rs/byte-wrapper/0.2.0/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
+[`HexArray`]: https://docs.rs/byte-wrapper/0.2.1/byte_wrapper/hex_array/struct.HexArray.html "struct byte_wrapper::hex_array::HexArray"
 <!-- cargo-sync-rdme ]] -->
 
 ## License

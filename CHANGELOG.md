@@ -3,6 +3,12 @@
 <!-- next-header -->
 ## Unreleased - ReleaseDate
 
+### Fixed
+
+- `Base64Vec` can now be deserialized from CBOR byte strings longer than 4096
+  bytes, as well as from indefinite-length (chunked) byte strings. Previously,
+  these failed with "invalid type: bytes, expected bytes".
+
 ## [0.1.1] - 2026-10-20
 
 ### Changed

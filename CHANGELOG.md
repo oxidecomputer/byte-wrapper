@@ -12,20 +12,20 @@
 
 ### Changed
 
-- **Breaking:** `Base64Vec` now dereferences to `Base64Slice` instead of
-  `Vec<u8>`, and no longer implements `DerefMut`. `Base64Slice` dereferences
-  to `[u8]`, so slice methods such as `len` and indexing still work. To modify
-  the bytes, use the public field (`.0`) or `AsMut<[u8]>`.
-- **Breaking:** The `base64` feature no longer implies `alloc`. `Base64Slice`
-  is now available without `alloc`, but `Base64Vec` and `ParseBase64Error`
-  require both `base64` and `alloc`. `alloc` is enabled by default; if you use
-  `default-features = false` with `features = ["base64"]`, add `"alloc"` to keep
-  `Base64Vec`.
-- **Breaking:** `ParseHexError` has a new `OddLength` variant, returned when parsing a
+- `Base64Vec` now dereferences to `Base64Slice` instead of `Vec<u8>`, and no longer
+  implements `DerefMut`. `Base64Slice` dereferences to `[u8]`, so slice methods such
+  as `len` and indexing still work. To modify the bytes, use the public field (`.0`)
+  or `AsMut<[u8]>`.
+
+- The `base64` feature no longer implies `alloc`. `Base64Slice` is now available without
+  `alloc`, but `Base64Vec` requires both `base64` and `alloc`.
+
+  `alloc` is enabled by default; if you use `default-features = false` with
+  `features = ["base64"]`, add `"alloc"` to keep using `Base64Vec`.
+
+- `ParseHexError` has a new `OddLength` variant, returned when parsing a
   `HexVec` from a string with an odd number of characters. This is a breaking
   change for code that matches exhaustively on `ParseHexError`.
-- `Base64Slice` and `Base64Vec` now format with `Display` and `Debug` without
-  allocating an intermediate `String`.
 
 ### Fixed
 

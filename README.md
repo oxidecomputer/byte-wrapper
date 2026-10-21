@@ -33,6 +33,10 @@ including automatic opt-in replacement with
 
 * [`HexArray<N>`] encodes a fixed-length byte array as a hex
   string. (Requires the `hex` feature.)
+* [`HexSlice`] encodes a borrowed byte slice as a hex string.
+  (Requires the `hex` feature.)
+* [`HexVec`] encodes a variable-length byte vector as a hex
+  string. (Requires the `hex` and `alloc` features.)
 * [`Base64Vec`] encodes a variable-length byte vector as a base64
   string. (Requires the `base64` and `alloc` features.)
 * [`Base64Slice`] encodes a borrowed byte slice as a base64 string.
@@ -108,11 +112,12 @@ The closest alternatives are:
 
 ## Features
 
-* **`hex`**: enables [`HexArray`]. *Enabled by default.*
+* **`hex`**: enables [`HexArray`] and [`HexSlice`], and [`HexVec`]
+  together with `alloc`. *Enabled by default.*
 * **`base64`**: enables [`Base64Slice`], and [`Base64Vec`] together with
   `alloc`. *Enabled by default.*
-* **`alloc`**: enables `alloc` support (required by [`Base64Vec`]).
-  *Enabled by default.*
+* **`alloc`**: enables `alloc` support (required by [`Base64Vec`] and
+  [`HexVec`]). *Enabled by default.*
 * **`serde`**: implements `Serialize` and `Deserialize` for
   enabled types. *Not enabled by default.*
 * **`schemars08`**: derives `JsonSchema` for enabled types.
@@ -124,6 +129,8 @@ All features other than `schemars08` are compatible with `no_std`.
 [`Base64Vec`]: https://docs.rs/byte-wrapper/0.1.1/byte_wrapper/base64_vec/struct.Base64Vec.html "struct byte_wrapper::base64_vec::Base64Vec"
 [CBOR]: https://cbor.io/
 [`JsonSchema`]: https://docs.rs/schemars/0.8/schemars/trait.JsonSchema.html
+[`HexSlice`]: https://docs.rs/byte-wrapper/0.1.1/byte_wrapper/hex_slice/struct.HexSlice.html "struct byte_wrapper::hex_slice::HexSlice"
+[`HexVec`]: https://docs.rs/byte-wrapper/0.1.1/byte_wrapper/hex_vec/struct.HexVec.html "struct byte_wrapper::hex_vec::HexVec"
 [`Base64Slice`]: https://docs.rs/byte-wrapper/0.1.1/byte_wrapper/base64_slice/struct.Base64Slice.html "struct byte_wrapper::base64_slice::Base64Slice"
 [`serde-human-bytes`]: https://docs.rs/serde-human-bytes
 [`serde-encoded-bytes`]: https://docs.rs/serde-encoded-bytes

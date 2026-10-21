@@ -7,6 +7,8 @@
 
 - `Base64Slice`, the borrowed counterpart of `Base64Vec`, analogous to `str`
   and `String`.
+- `HexSlice` and `HexVec`, a borrowed/owned pair of hex types for
+  variable-length bytes, analogous to `str` and `String`.
 
 ### Changed
 
@@ -19,6 +21,9 @@
   require both `base64` and `alloc`. `alloc` is enabled by default; if you use
   `default-features = false` with `features = ["base64"]`, add `"alloc"` to keep
   `Base64Vec`.
+- **Breaking:** `ParseHexError` has a new `OddLength` variant, returned when parsing a
+  `HexVec` from a string with an odd number of characters. This is a breaking
+  change for code that matches exhaustively on `ParseHexError`.
 - `Base64Slice` and `Base64Vec` now format with `Display` and `Debug` without
   allocating an intermediate `String`.
 

@@ -191,10 +191,7 @@ mod serde_impls {
     use alloc::vec::Vec;
     use base64::Engine;
     use core::fmt;
-    use serde_core::{
-        Deserializer, Serializer,
-        de::{SeqAccess, Visitor},
-    };
+    use serde_core::{Deserializer, Serializer, de::Visitor};
 
     /// Serializes a byte slice as base64 if human-readable, or as
     /// raw bytes if not.
@@ -244,49 +241,7 @@ mod serde_impls {
 
             deserializer.deserialize_str(Base64Visitor)
         } else {
-            struct BytesVisitor;
-
-            impl<'de2> Visitor<'de2> for BytesVisitor {
-                type Value = Vec<u8>;
-
-                fn expecting(
-                    &self,
-                    formatter: &mut fmt::Formatter,
-                ) -> fmt::Result {
-                    write!(formatter, "a byte array")
-                }
-
-                fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-                where
-                    E: Error,
-                {
-                    Ok(v.to_vec())
-                }
-
-                fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-                where
-                    E: Error,
-                {
-                    Ok(v)
-                }
-
-                fn visit_seq<A>(
-                    self,
-                    mut seq: A,
-                ) -> Result<Self::Value, A::Error>
-                where
-                    A: SeqAccess<'de2>,
-                {
-                    let hint = seq.size_hint().unwrap_or(0);
-                    let mut out = Vec::with_capacity(hint.min(4096));
-                    while let Some(byte) = seq.next_element()? {
-                        out.push(byte);
-                    }
-                    Ok(out)
-                }
-            }
-
-            deserializer.deserialize_byte_buf(BytesVisitor)
+            crate::serde_util::deserialize_byte_buf(deserializer)
         }
     }
 

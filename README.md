@@ -18,13 +18,13 @@ human-readable encodings. [`HexArray<N>`] encodes fixed-length byte
 arrays as hex strings, and [`Base64Vec`] encodes variable-length
 byte vectors as base64 strings.
 
-With the `serde` feature, both types implement `Serialize` and
+With the `serde` feature, this crate’s types implement `Serialize` and
 `Deserialize`, encoding as human-readable strings (hex or base64) in text
 formats like JSON, and as efficient raw bytes in binary formats like [CBOR].
 You do not have to use the newtypes in your own type definitions; you can
 refer to them via `#[serde(with = "...")]` instead.
 
-With the `schemars08` feature, both types implement [`JsonSchema`],
+With the `schemars08` feature, this crate’s types implement [`JsonSchema`],
 including automatic opt-in replacement with
 [typify](https://crates.io/crates/typify) and
 [progenitor](https://crates.io/crates/progenitor).
@@ -34,7 +34,9 @@ including automatic opt-in replacement with
 * [`HexArray<N>`] encodes a fixed-length byte array as a hex
   string. (Requires the `hex` feature.)
 * [`Base64Vec`] encodes a variable-length byte vector as a base64
-  string. (Requires the `base64` feature.)
+  string. (Requires the `base64` and `alloc` features.)
+* [`Base64Slice`] encodes a borrowed byte slice as a base64 string.
+  (Requires the `base64` feature.)
 
 ## Examples
 
@@ -107,9 +109,10 @@ The closest alternatives are:
 ## Features
 
 * **`hex`**: enables [`HexArray`]. *Enabled by default.*
-* **`base64`**: enables [`Base64Vec`] (implies `alloc`).
+* **`base64`**: enables [`Base64Slice`], and [`Base64Vec`] together with
+  `alloc`. *Enabled by default.*
+* **`alloc`**: enables `alloc` support (required by [`Base64Vec`]).
   *Enabled by default.*
-* **`alloc`**: enables `alloc` support (required by `base64`).
 * **`serde`**: implements `Serialize` and `Deserialize` for
   enabled types. *Not enabled by default.*
 * **`schemars08`**: derives `JsonSchema` for enabled types.
@@ -121,6 +124,7 @@ All features other than `schemars08` are compatible with `no_std`.
 [`Base64Vec`]: https://docs.rs/byte-wrapper/0.1.1/byte_wrapper/base64_vec/struct.Base64Vec.html "struct byte_wrapper::base64_vec::Base64Vec"
 [CBOR]: https://cbor.io/
 [`JsonSchema`]: https://docs.rs/schemars/0.8/schemars/trait.JsonSchema.html
+[`Base64Slice`]: https://docs.rs/byte-wrapper/0.1.1/byte_wrapper/base64_slice/struct.Base64Slice.html "struct byte_wrapper::base64_slice::Base64Slice"
 [`serde-human-bytes`]: https://docs.rs/serde-human-bytes
 [`serde-encoded-bytes`]: https://docs.rs/serde-encoded-bytes
 [`serde_with`]: https://docs.rs/serde_with

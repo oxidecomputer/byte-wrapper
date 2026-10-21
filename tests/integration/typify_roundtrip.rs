@@ -6,8 +6,9 @@
 
 #[cfg(feature = "base64")]
 mod base64_tests {
-    use byte_wrapper::Base64Vec;
+    use byte_wrapper::{Base64Slice, Base64Vec};
     use schemars08::{self as schemars, JsonSchema, schema_for};
+    use std::borrow::Cow;
 
     #[expect(dead_code)]
     #[derive(JsonSchema)]
@@ -36,6 +37,21 @@ mod base64_tests {
         let code = super::typify_output(&schema_for!(HasBase64WithAttr));
         expectorate::assert_contents(
             "tests/output/typify-base64-with-attr.rs",
+            &code,
+        );
+    }
+
+    #[expect(dead_code)]
+    #[derive(JsonSchema)]
+    struct HasBase64SliceCow {
+        data: Cow<'static, Base64Slice>,
+    }
+
+    #[test]
+    fn base64_slice_cow() {
+        let code = super::typify_output(&schema_for!(HasBase64SliceCow));
+        expectorate::assert_contents(
+            "tests/output/typify-base64-slice-cow.rs",
             &code,
         );
     }

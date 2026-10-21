@@ -8,11 +8,11 @@ use byte_wrapper::{Base64Vec, ParseBase64Error};
 #[test]
 fn base64_from_str() {
     let b: Base64Vec = "AQID".parse().expect("parsed");
-    assert_eq!(*b, [1, 2, 3]);
+    assert_eq!(b.as_bytes(), [1, 2, 3]);
 
     // With padding.
     let b: Base64Vec = "AQIDBA==".parse().expect("parsed padded");
-    assert_eq!(*b, [1, 2, 3, 4]);
+    assert_eq!(b.as_bytes(), [1, 2, 3, 4]);
 
     // Empty.
     let b: Base64Vec = "".parse().expect("parsed empty");

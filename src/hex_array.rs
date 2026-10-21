@@ -117,31 +117,37 @@ impl fmt::Display for ParseHexError {
 
 impl error::Error for ParseHexError {}
 
+/// Decodes `s` into `out`, requiring that `s` is exactly `2 * out.len()` hex
+/// characters.
+pub(crate) fn decode_hex_into(
+    s: &str,
+    out: &mut [u8],
+) -> Result<(), ParseHexError> {
+    let expected = out.len() * 2;
+    if s.len() != expected {
+        return Err(ParseHexError::InvalidLength { expected, actual: s.len() });
+    }
+    hex::decode_to_slice(s, out).map_err(|e| {
+        match e {
+            hex::FromHexError::InvalidHexCharacter { c, index } => {
+                ParseHexError::InvalidHexCharacter { c, index }
+            }
+            // The length is already validated above, so this
+            // branch is unreachable in practice.
+            hex::FromHexError::OddLength
+            | hex::FromHexError::InvalidStringLength => {
+                ParseHexError::InvalidLength { expected, actual: s.len() }
+            }
+        }
+    })
+}
+
 impl<const N: usize> FromStr for HexArray<N> {
     type Err = ParseHexError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let expected = N * 2;
-        if s.len() != expected {
-            return Err(ParseHexError::InvalidLength {
-                expected,
-                actual: s.len(),
-            });
-        }
         let mut out = [0u8; N];
-        hex::decode_to_slice(s, &mut out).map_err(|e| {
-            match e {
-                hex::FromHexError::InvalidHexCharacter { c, index } => {
-                    ParseHexError::InvalidHexCharacter { c, index }
-                }
-                // The length is already validated above, so this
-                // branch is unreachable in practice.
-                hex::FromHexError::OddLength
-                | hex::FromHexError::InvalidStringLength => {
-                    ParseHexError::InvalidLength { expected, actual: s.len() }
-                }
-            }
-        })?;
+        decode_hex_into(s, &mut out)?;
         Ok(Self(out))
     }
 }
@@ -154,14 +160,14 @@ impl<const N: usize> fmt::Debug for HexArray<N> {
 
 /// Writes hex bytes with padding/alignment support.
 ///
-/// `write_byte` is called for each byte in the array to allow
+/// `write_byte` is called for each byte in the slice to allow
 /// callers to choose between lowercase and uppercase hex.
-fn fmt_hex_padded<const N: usize>(
-    bytes: &[u8; N],
+fn fmt_hex_padded(
+    bytes: &[u8],
     f: &mut fmt::Formatter<'_>,
     write_byte: fn(&mut fmt::Formatter<'_>, u8) -> fmt::Result,
 ) -> fmt::Result {
-    let content_len = N * 2;
+    let content_len = bytes.len() * 2;
 
     match f.width() {
         Some(width) if width > content_len => {

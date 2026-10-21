@@ -143,6 +143,8 @@ mod base64_vec;
 mod hex_array;
 #[cfg(all(feature = "schemars08", any(feature = "base64", feature = "hex")))]
 mod schemars_util;
+#[cfg(all(feature = "serde", feature = "base64"))]
+mod serde_util;
 
 #[cfg(feature = "base64")]
 pub use base64_vec::{Base64Vec, ParseBase64Error};

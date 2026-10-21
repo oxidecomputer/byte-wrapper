@@ -3,9 +3,10 @@
 
 //! The [`Base64Vec`] newtype wrapper.
 
-use alloc::vec::Vec;
+use crate::{Base64Slice, base64_slice::QuotedBase64};
+use alloc::{borrow::ToOwned, vec::Vec};
 use base64::Engine;
-use core::{error, fmt, str::FromStr};
+use core::{borrow::Borrow, error, fmt, str::FromStr};
 
 /// A byte vector that displays and parses as base64.
 ///
@@ -26,7 +27,7 @@ use core::{error, fmt, str::FromStr};
 /// assert_eq!(b.to_string(), "AQID");
 ///
 /// let parsed: Base64Vec = "AQID".parse().unwrap();
-/// assert_eq!(*parsed, [1, 2, 3]);
+/// assert_eq!(parsed.as_bytes(), [1, 2, 3]);
 /// ```
 #[must_use]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -44,6 +45,11 @@ impl Base64Vec {
     #[must_use]
     pub fn into_inner(self) -> Vec<u8> {
         self.0
+    }
+
+    #[inline]
+    fn as_base64_slice(&self) -> &Base64Slice {
+        Base64Slice::new(&self.0)
     }
 }
 
@@ -129,31 +135,45 @@ impl FromStr for Base64Vec {
 
 impl fmt::Debug for Base64Vec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Base64Vec")
-            .field(&base64::engine::general_purpose::STANDARD.encode(&self.0))
-            .finish()
+        f.debug_tuple("Base64Vec").field(&QuotedBase64(&self.0)).finish()
     }
 }
 
 impl fmt::Display for Base64Vec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        base64::engine::general_purpose::STANDARD.encode(&self.0).fmt(f)
+        fmt::Display::fmt(self.as_base64_slice(), f)
     }
 }
 
 impl core::ops::Deref for Base64Vec {
-    type Target = Vec<u8>;
+    type Target = Base64Slice;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        &self.0
+        self.as_base64_slice()
     }
 }
 
-impl core::ops::DerefMut for Base64Vec {
+impl Borrow<Base64Slice> for Base64Vec {
     #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+    fn borrow(&self) -> &Base64Slice {
+        self.as_base64_slice()
+    }
+}
+
+impl ToOwned for Base64Slice {
+    type Owned = Base64Vec;
+
+    #[inline]
+    fn to_owned(&self) -> Self::Owned {
+        Base64Vec(self.as_bytes().to_vec())
+    }
+}
+
+impl AsRef<Base64Slice> for Base64Vec {
+    #[inline]
+    fn as_ref(&self) -> &Base64Slice {
+        self.as_base64_slice()
     }
 }
 
@@ -185,31 +205,42 @@ impl From<Base64Vec> for Vec<u8> {
     }
 }
 
+impl PartialEq<Base64Slice> for Base64Vec {
+    #[inline]
+    fn eq(&self, other: &Base64Slice) -> bool {
+        self.as_base64_slice() == other
+    }
+}
+
+impl PartialEq<&Base64Slice> for Base64Vec {
+    #[inline]
+    fn eq(&self, other: &&Base64Slice) -> bool {
+        self.as_base64_slice() == *other
+    }
+}
+
+impl PartialEq<Base64Vec> for Base64Slice {
+    #[inline]
+    fn eq(&self, other: &Base64Vec) -> bool {
+        self == other.as_base64_slice()
+    }
+}
+
+impl PartialEq<Base64Vec> for &Base64Slice {
+    #[inline]
+    fn eq(&self, other: &Base64Vec) -> bool {
+        *self == other.as_base64_slice()
+    }
+}
+
 #[cfg(feature = "serde")]
 mod serde_impls {
     use super::Base64Vec;
+    use crate::Base64Slice;
     use alloc::vec::Vec;
     use base64::Engine;
     use core::fmt;
-    use serde_core::{Deserializer, Serializer, de::Visitor};
-
-    /// Serializes a byte slice as base64 if human-readable, or as
-    /// raw bytes if not.
-    fn serialize_bytes<S>(
-        bytes: &[u8],
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        if serializer.is_human_readable() {
-            let encoded =
-                base64::engine::general_purpose::STANDARD.encode(bytes);
-            serializer.serialize_str(&encoded)
-        } else {
-            serializer.serialize_bytes(bytes)
-        }
-    }
+    use serde_core::{Deserializer, Serialize, Serializer, de::Visitor};
 
     /// Deserializes base64 strings (if human-readable) or byte
     /// arrays (if not) to `Vec<u8>`.
@@ -275,7 +306,7 @@ mod serde_impls {
         where
             S: Serializer,
         {
-            serialize_bytes(bytes, serializer)
+            Base64Slice::new(bytes).serialize(serializer)
         }
 
         /// Deserializes a byte vector from base64 if the format is
@@ -313,7 +344,7 @@ mod serde_impls {
         where
             S: Serializer,
         {
-            serialize_bytes(&self.0, serializer)
+            self.as_base64_slice().serialize(serializer)
         }
     }
 
@@ -331,7 +362,7 @@ mod serde_impls {
 #[cfg(feature = "schemars08")]
 mod schemars_impls {
     use super::Base64Vec;
-    use crate::schemars_util::x_rust_type_extension;
+    use crate::{Base64Slice, schemars_util::x_rust_type_extension};
     use alloc::string::String;
     use schemars08::{
         JsonSchema,
@@ -357,6 +388,23 @@ mod schemars_impls {
                 extensions,
                 ..Default::default()
             })
+        }
+    }
+
+    // Base64Slice shares Base64Vec's schema (including `x-rust-type` set to
+    // `Base64Vec`) since generated code needs owned types. (This also covers
+    // `Cow<'_, Base64Slice>`.)
+    impl JsonSchema for Base64Slice {
+        fn schema_name() -> String {
+            Base64Vec::schema_name()
+        }
+
+        fn is_referenceable() -> bool {
+            Base64Vec::is_referenceable()
+        }
+
+        fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+            Base64Vec::json_schema(generator)
         }
     }
 }

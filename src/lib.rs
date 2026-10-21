@@ -9,13 +9,13 @@
 //! arrays as hex strings, and [`Base64Vec`] encodes variable-length
 //! byte vectors as base64 strings.
 //!
-//! With the `serde` feature, both types implement `Serialize` and
+//! With the `serde` feature, this crate's types implement `Serialize` and
 //! `Deserialize`, encoding as human-readable strings (hex or base64) in text
 //! formats like JSON, and as efficient raw bytes in binary formats like [CBOR].
 //! You do not have to use the newtypes in your own type definitions; you can
 //! refer to them via `#[serde(with = "...")]` instead.
 //!
-//! With the `schemars08` feature, both types implement [`JsonSchema`],
+//! With the `schemars08` feature, this crate's types implement [`JsonSchema`],
 //! including automatic opt-in replacement with
 //! [typify](https://crates.io/crates/typify) and
 //! [progenitor](https://crates.io/crates/progenitor).
@@ -27,7 +27,9 @@
 //! * [`HexArray<N>`] encodes a fixed-length byte array as a hex
 //!   string. (Requires the `hex` feature.)
 //! * [`Base64Vec`] encodes a variable-length byte vector as a base64
-//!   string. (Requires the `base64` feature.)
+//!   string. (Requires the `base64` and `alloc` features.)
+//! * [`Base64Slice`] encodes a borrowed byte slice as a base64 string.
+//!   (Requires the `base64` feature.)
 //!
 //! # Examples
 //!
@@ -120,9 +122,10 @@
 //! # Features
 //!
 //! - **`hex`**: enables [`HexArray`]. *Enabled by default.*
-//! - **`base64`**: enables [`Base64Vec`] (implies `alloc`).
+//! - **`base64`**: enables [`Base64Slice`], and [`Base64Vec`] together with
+//!   `alloc`. *Enabled by default.*
+//! - **`alloc`**: enables `alloc` support (required by [`Base64Vec`]).
 //!   *Enabled by default.*
-//! - **`alloc`**: enables `alloc` support (required by `base64`).
 //! - **`serde`**: implements `Serialize` and `Deserialize` for
 //!   enabled types. *Not enabled by default.*
 //! - **`schemars08`**: derives `JsonSchema` for enabled types.
@@ -138,15 +141,19 @@
 extern crate alloc;
 
 #[cfg(feature = "base64")]
+mod base64_slice;
+#[cfg(all(feature = "base64", feature = "alloc"))]
 mod base64_vec;
 #[cfg(feature = "hex")]
 mod hex_array;
 #[cfg(all(feature = "schemars08", any(feature = "base64", feature = "hex")))]
 mod schemars_util;
-#[cfg(all(feature = "serde", feature = "base64"))]
+#[cfg(all(feature = "serde", feature = "base64", feature = "alloc"))]
 mod serde_util;
 
 #[cfg(feature = "base64")]
+pub use base64_slice::Base64Slice;
+#[cfg(all(feature = "base64", feature = "alloc"))]
 pub use base64_vec::{Base64Vec, ParseBase64Error};
 #[cfg(feature = "hex")]
 pub use hex_array::{HexArray, ParseHexError};

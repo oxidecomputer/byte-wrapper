@@ -49,7 +49,7 @@ pub mod error {
 ///      "x-rust-type": {
 ///        "crate": "byte-wrapper",
 ///        "path": "byte_wrapper::Base64Vec",
-///        "version": "0.1.0"
+///        "version": "0.2.0"
 ///      }
 ///    }
 ///  }

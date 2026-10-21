@@ -3,6 +3,10 @@
 <!-- next-header -->
 ## Unreleased - ReleaseDate
 
+### Fixed
+
+- For JSON schemas, the `x-rust-type` correctly sets version 0.2.0.
+
 ## [0.2.0] - 2026-10-21
 
 ### Added

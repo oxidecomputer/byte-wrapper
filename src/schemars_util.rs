@@ -13,7 +13,7 @@ pub(crate) fn x_rust_type_extension(
         "x-rust-type".into(),
         serde_json::json!({
             "crate": "byte-wrapper",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "path": format!("byte_wrapper::{type_name}"),
         }),
     )]

@@ -11,7 +11,7 @@ fn hex_vec_property() -> serde_json::Value {
         "pattern": "^([0-9a-fA-F]{2})*$",
         "x-rust-type": {
             "crate": "byte-wrapper",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "path": "byte_wrapper::HexVec"
         }
     })

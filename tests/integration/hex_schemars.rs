@@ -17,7 +17,7 @@ fn hex_array_schema() {
         "pattern": "^[0-9a-fA-F]{32}$",
         "x-rust-type": {
             "crate": "byte-wrapper",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "path": "byte_wrapper::HexArray::<16>"
         }
     });
@@ -54,7 +54,7 @@ fn with_hex_array_attr() {
                 "pattern": "^[0-9a-fA-F]{32}$",
                 "x-rust-type": {
                     "crate": "byte-wrapper",
-                    "version": "0.1.0",
+                    "version": "0.2.0",
                     "path": "byte_wrapper::HexArray::<16>"
                 }
             }
@@ -80,7 +80,7 @@ fn with_hex_array_direct() {
                 "pattern": "^[0-9a-fA-F]{32}$",
                 "x-rust-type": {
                     "crate": "byte-wrapper",
-                    "version": "0.1.0",
+                    "version": "0.2.0",
                     "path": "byte_wrapper::HexArray::<16>"
                 }
             }

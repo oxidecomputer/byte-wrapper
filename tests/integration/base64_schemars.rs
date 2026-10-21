@@ -17,7 +17,7 @@ fn base64_vec_schema() {
         "contentEncoding": "base64",
         "x-rust-type": {
             "crate": "byte-wrapper",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "path": "byte_wrapper::Base64Vec"
         }
     });
@@ -78,7 +78,7 @@ fn with_base64_vec_attr() {
                 "contentEncoding": "base64",
                 "x-rust-type": {
                     "crate": "byte-wrapper",
-                    "version": "0.1.0",
+                    "version": "0.2.0",
                     "path": "byte_wrapper::Base64Vec"
                 }
             }
@@ -103,7 +103,7 @@ fn with_base64_vec_direct() {
                 "contentEncoding": "base64",
                 "x-rust-type": {
                     "crate": "byte-wrapper",
-                    "version": "0.1.0",
+                    "version": "0.2.0",
                     "path": "byte_wrapper::Base64Vec"
                 }
             }

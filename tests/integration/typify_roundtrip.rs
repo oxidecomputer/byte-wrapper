@@ -150,7 +150,7 @@ fn typify_output(root_schema: &schemars08::schema::RootSchema) -> String {
     let mut settings = TypeSpaceSettings::default();
     settings.with_crate(
         "byte-wrapper",
-        CrateVers::Version("0.1.0".parse().unwrap()),
+        CrateVers::Version("0.2.0".parse().unwrap()),
         None,
     );
     let mut type_space = TypeSpace::new(&settings);

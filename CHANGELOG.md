@@ -3,6 +3,8 @@
 <!-- next-header -->
 ## Unreleased - ReleaseDate
 
+## [0.2.0] - 2026-10-21
+
 ### Added
 
 - `Base64Slice`, the borrowed counterpart of `Base64Vec`, analogous to `str`
@@ -49,5 +51,6 @@
 Initial release, with support for fixed-length hex arrays and variable-length base64 vectors.
 
 <!-- next-url -->
+[0.2.0]: https://github.com/oxidecomputer/byte-wrapper/releases/tag/byte-wrapper-0.2.0
 [0.1.1]: https://github.com/oxidecomputer/byte-wrapper/releases/tag/byte-wrapper-0.1.1
 [0.1.0]: https://github.com/oxidecomputer/byte-wrapper/releases/tag/byte-wrapper-0.1.0

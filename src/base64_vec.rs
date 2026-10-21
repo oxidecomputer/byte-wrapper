@@ -286,7 +286,7 @@ mod serde_impls {
                 }
             }
 
-            deserializer.deserialize_bytes(BytesVisitor)
+            deserializer.deserialize_byte_buf(BytesVisitor)
         }
     }
 

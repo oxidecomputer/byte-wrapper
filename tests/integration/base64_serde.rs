@@ -140,3 +140,38 @@ fn base64_vec_direct() {
         serde_json::from_str(&json).expect("deserialized");
     assert_eq!(fixture, roundtrip);
 }
+
+/// Tests that deserializing large byte buffers works with ciborium.
+///
+/// ciborium's deserialize_bytes only accepts definite-length byte strings that
+/// fit its 4096-byte scratch buffer, so we must call `deserialize_byte_buf`
+/// instead.
+#[test]
+fn base64_cbor_large_and_indefinite_length() {
+    let large: Vec<u8> = (0..=255).cycle().take(4097).collect();
+    let attr = WithBase64VecAttr { data: large.clone() };
+    let direct = WithBase64VecDirect { data: Base64Vec::new(large) };
+
+    let mut cbor = Vec::new();
+    ciborium::ser::into_writer(&attr, &mut cbor)
+        .expect("serializing large value as CBOR succeeded");
+    let attr_roundtrip: WithBase64VecAttr =
+        ciborium::de::from_reader(&cbor[..])
+            .expect("large CBOR byte string deserialized via attr");
+    assert_eq!(attr, attr_roundtrip);
+    let direct_roundtrip: WithBase64VecDirect =
+        ciborium::de::from_reader(&cbor[..])
+            .expect("large CBOR byte string deserialized directly");
+    assert_eq!(direct, direct_roundtrip);
+
+    // This is the CBOR encoding for {"data": (_ h'0102' h'03')}, an
+    // indefinite-length byte string split into two chunks.
+    let indefinite = hex!("a1 6464617461 5f 42 0102 41 03 ff");
+    let attr: WithBase64VecAttr = ciborium::de::from_reader(&indefinite[..])
+        .expect("indefinite-length CBOR byte string deserialized via attr");
+    assert_eq!(attr.data, [1, 2, 3]);
+    let direct: WithBase64VecDirect =
+        ciborium::de::from_reader(&indefinite[..])
+            .expect("indefinite-length CBOR byte string deserialized directly");
+    assert_eq!(direct.data, Base64Vec::new(vec![1, 2, 3]));
+}

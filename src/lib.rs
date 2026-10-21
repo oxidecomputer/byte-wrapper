@@ -26,6 +26,10 @@
 //!
 //! * [`HexArray<N>`] encodes a fixed-length byte array as a hex
 //!   string. (Requires the `hex` feature.)
+//! * [`HexSlice`] encodes a borrowed byte slice as a hex string.
+//!   (Requires the `hex` feature.)
+//! * [`HexVec`] encodes a variable-length byte vector as a hex
+//!   string. (Requires the `hex` and `alloc` features.)
 //! * [`Base64Vec`] encodes a variable-length byte vector as a base64
 //!   string. (Requires the `base64` and `alloc` features.)
 //! * [`Base64Slice`] encodes a borrowed byte slice as a base64 string.
@@ -121,11 +125,12 @@
 //!
 //! # Features
 //!
-//! - **`hex`**: enables [`HexArray`]. *Enabled by default.*
+//! - **`hex`**: enables [`HexArray`] and [`HexSlice`], and [`HexVec`]
+//!   together with `alloc`. *Enabled by default.*
 //! - **`base64`**: enables [`Base64Slice`], and [`Base64Vec`] together with
 //!   `alloc`. *Enabled by default.*
-//! - **`alloc`**: enables `alloc` support (required by [`Base64Vec`]).
-//!   *Enabled by default.*
+//! - **`alloc`**: enables `alloc` support (required by [`Base64Vec`] and
+//!   [`HexVec`]). *Enabled by default.*
 //! - **`serde`**: implements `Serialize` and `Deserialize` for
 //!   enabled types. *Not enabled by default.*
 //! - **`schemars08`**: derives `JsonSchema` for enabled types.
@@ -146,9 +151,17 @@ mod base64_slice;
 mod base64_vec;
 #[cfg(feature = "hex")]
 mod hex_array;
+#[cfg(feature = "hex")]
+mod hex_slice;
+#[cfg(all(feature = "hex", feature = "alloc"))]
+mod hex_vec;
 #[cfg(all(feature = "schemars08", any(feature = "base64", feature = "hex")))]
 mod schemars_util;
-#[cfg(all(feature = "serde", feature = "base64", feature = "alloc"))]
+#[cfg(all(
+    feature = "serde",
+    feature = "alloc",
+    any(feature = "base64", feature = "hex")
+))]
 mod serde_util;
 
 #[cfg(feature = "base64")]
@@ -157,3 +170,7 @@ pub use base64_slice::Base64Slice;
 pub use base64_vec::{Base64Vec, ParseBase64Error};
 #[cfg(feature = "hex")]
 pub use hex_array::{HexArray, ParseHexError};
+#[cfg(feature = "hex")]
+pub use hex_slice::HexSlice;
+#[cfg(all(feature = "hex", feature = "alloc"))]
+pub use hex_vec::HexVec;

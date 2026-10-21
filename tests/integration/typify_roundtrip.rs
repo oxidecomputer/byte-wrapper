@@ -59,8 +59,9 @@ mod base64_tests {
 
 #[cfg(feature = "hex")]
 mod hex_tests {
-    use byte_wrapper::HexArray;
+    use byte_wrapper::{HexArray, HexSlice, HexVec};
     use schemars08::{self as schemars, JsonSchema, schema_for};
+    use std::borrow::Cow;
 
     #[expect(dead_code)]
     #[derive(JsonSchema)]
@@ -89,6 +90,52 @@ mod hex_tests {
         let code = super::typify_output(&schema_for!(HasHexWithAttr));
         expectorate::assert_contents(
             "tests/output/typify-hex-with-attr.rs",
+            &code,
+        );
+    }
+
+    #[expect(dead_code)]
+    #[derive(JsonSchema)]
+    struct HasHexVecDirect {
+        data: HexVec,
+    }
+
+    #[test]
+    fn hex_vec_direct() {
+        let code = super::typify_output(&schema_for!(HasHexVecDirect));
+        expectorate::assert_contents(
+            "tests/output/typify-hex-vec-direct.rs",
+            &code,
+        );
+    }
+
+    #[expect(dead_code)]
+    #[derive(JsonSchema)]
+    struct HasHexVecWithAttr {
+        #[schemars(with = "HexVec")]
+        data: Vec<u8>,
+    }
+
+    #[test]
+    fn hex_vec_with_attr() {
+        let code = super::typify_output(&schema_for!(HasHexVecWithAttr));
+        expectorate::assert_contents(
+            "tests/output/typify-hex-vec-with-attr.rs",
+            &code,
+        );
+    }
+
+    #[expect(dead_code)]
+    #[derive(JsonSchema)]
+    struct HasHexSliceCow {
+        data: Cow<'static, HexSlice>,
+    }
+
+    #[test]
+    fn hex_slice_cow() {
+        let code = super::typify_output(&schema_for!(HasHexSliceCow));
+        expectorate::assert_contents(
+            "tests/output/typify-hex-slice-cow.rs",
             &code,
         );
     }

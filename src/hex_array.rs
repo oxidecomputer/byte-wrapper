@@ -3,12 +3,8 @@
 
 //! The [`HexArray`] newtype wrapper.
 
-use core::{
-    array::TryFromSliceError,
-    error,
-    fmt::{self, Write},
-    str::FromStr,
-};
+use crate::{HexSlice, hex_slice::HexDisplay};
+use core::{array::TryFromSliceError, error, fmt, str::FromStr};
 
 /// A byte array that displays and parses as hex.
 ///
@@ -58,34 +54,19 @@ impl<const N: usize> HexArray<N> {
     }
 }
 
-/// Formats a byte slice as lower-case hex.
-///
-/// This is used both for serialization (via `Display`) and as the
-/// inner value in `HexArray`'s `Debug` output (via `Debug`).
-struct HexDisplay<'a>(&'a [u8]);
-
-impl fmt::Display for HexDisplay<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in self.0 {
-            write!(f, "{byte:02x}")?;
-        }
-        Ok(())
-    }
-}
-
-impl fmt::Debug for HexDisplay<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self, f)
-    }
-}
-
-/// Error returned by [`HexArray::from_str`].
+/// Error returned by [`HexArray::from_str`] and
+/// [`HexVec::from_str`](crate::HexVec).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseHexError {
     /// The input string had the wrong length.
     InvalidLength {
         /// Expected number of hex characters.
         expected: usize,
+        /// Actual number of characters in the input.
+        actual: usize,
+    },
+    /// The input string had an odd number of characters.
+    OddLength {
         /// Actual number of characters in the input.
         actual: usize,
     },
@@ -106,6 +87,12 @@ impl fmt::Display for ParseHexError {
                     f,
                     "expected {} hex characters, got {}",
                     expected, actual,
+                )
+            }
+            ParseHexError::OddLength { actual } => {
+                write!(
+                    f,
+                    "expected an even number of hex characters, got {actual}",
                 )
             }
             ParseHexError::InvalidHexCharacter { c, index } => {
@@ -158,63 +145,21 @@ impl<const N: usize> fmt::Debug for HexArray<N> {
     }
 }
 
-/// Writes hex bytes with padding/alignment support.
-///
-/// `write_byte` is called for each byte in the slice to allow
-/// callers to choose between lowercase and uppercase hex.
-fn fmt_hex_padded(
-    bytes: &[u8],
-    f: &mut fmt::Formatter<'_>,
-    write_byte: fn(&mut fmt::Formatter<'_>, u8) -> fmt::Result,
-) -> fmt::Result {
-    let content_len = bytes.len() * 2;
-
-    match f.width() {
-        Some(width) if width > content_len => {
-            let padding = width - content_len;
-            let fill = f.fill();
-            let (pre, post) = match f.align() {
-                Some(fmt::Alignment::Left) => (0, padding),
-                Some(fmt::Alignment::Right) | None => (padding, 0),
-                Some(fmt::Alignment::Center) => {
-                    (padding / 2, padding - padding / 2)
-                }
-            };
-            for _ in 0..pre {
-                f.write_char(fill)?;
-            }
-            for &byte in bytes {
-                write_byte(f, byte)?;
-            }
-            for _ in 0..post {
-                f.write_char(fill)?;
-            }
-            Ok(())
-        }
-        Some(_) | None => {
-            for &byte in bytes {
-                write_byte(f, byte)?;
-            }
-            Ok(())
-        }
-    }
-}
-
 impl<const N: usize> fmt::Display for HexArray<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex_padded(&self.0, f, |f, b| write!(f, "{b:02x}"))
+        fmt::Display::fmt(HexSlice::new(&self.0), f)
     }
 }
 
 impl<const N: usize> fmt::LowerHex for HexArray<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex_padded(&self.0, f, |f, b| write!(f, "{b:02x}"))
+        fmt::LowerHex::fmt(HexSlice::new(&self.0), f)
     }
 }
 
 impl<const N: usize> fmt::UpperHex for HexArray<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex_padded(&self.0, f, |f, b| write!(f, "{b:02X}"))
+        fmt::UpperHex::fmt(HexSlice::new(&self.0), f)
     }
 }
 
@@ -273,28 +218,13 @@ impl<const N: usize> TryFrom<&[u8]> for HexArray<N> {
 
 #[cfg(feature = "serde")]
 mod serde_impls {
-    use super::{HexArray, HexDisplay};
+    use super::HexArray;
+    use crate::HexSlice;
     use core::fmt;
     use serde_core::{
-        Deserializer,
+        Deserializer, Serialize,
         de::{Expected, SeqAccess, Visitor},
     };
-
-    /// Serializes a byte slice as lower-case hex if human-readable,
-    /// or as raw bytes if not.
-    fn serialize_lower<S>(
-        bytes: &[u8],
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: serde_core::Serializer,
-    {
-        if serializer.is_human_readable() {
-            serializer.collect_str(&HexDisplay(bytes))
-        } else {
-            serializer.serialize_bytes(bytes)
-        }
-    }
 
     struct HexExpected<const N: usize>;
 
@@ -447,7 +377,7 @@ mod serde_impls {
         where
             S: serde_core::Serializer,
         {
-            serialize_lower(bytes, serializer)
+            HexSlice::new(bytes).serialize(serializer)
         }
 
         /// Deserializes a byte array from hex if the format is
@@ -486,7 +416,7 @@ mod serde_impls {
         where
             S: serde_core::Serializer,
         {
-            serialize_lower(&self.0, serializer)
+            HexSlice::new(&self.0).serialize(serializer)
         }
     }
 
